@@ -1,0 +1,36 @@
+appId: com.stackprep.stackprep
+name: 06 Guest creates account, logs out, logs back in
+---
+- runFlow: subflows/onboard.yaml
+- evalScript: ${output.email = 'maestro' + Date.now() + '@test.com'}
+- tapOn: "(?s)Profile\nTab.*"
+- tapOn: "(?s).*Create account to save progress.*"
+- tapOn: "(?s).*Full name.*"
+- inputText: "Maestro Tester"
+- tapOn: "(?s).*Email.*"
+- inputText: ${output.email}
+- tapOn: "(?s).*Password.*"
+- inputText: "secret123"
+- hideKeyboard
+- tapOn: "Create account"
+- extendedWaitUntil:
+    visible: "(?s).*Maestro Tester.*"
+    timeout: 20000
+- scrollUntilVisible:
+    element: "Log out"
+    direction: DOWN
+- tapOn: "Log out"
+- tapOn: "Log out"
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 20000
+- tapOn: "I already have an account"
+- tapOn: "(?s).*Email.*"
+- inputText: ${output.email}
+- tapOn: "(?s).*Password.*"
+- inputText: "secret123"
+- hideKeyboard
+- tapOn: "Login"
+- extendedWaitUntil:
+    visible: "(?s).*Hi, Maestro.*"
+    timeout: 20000

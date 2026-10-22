@@ -1,0 +1,21 @@
+# Fresh install -> Get started -> pick designation -> home.
+# Note: Flutter merges a card's texts into one accessibility node ("Title\nSubtitle"),
+# so selectors use (?s) regexes that span newlines.
+appId: com.stackprep.stackprep
+env:
+  ROLE: Backend Developer
+---
+- launchApp:
+    clearState: true
+- runFlow: dismiss_anr.yaml
+- extendedWaitUntil:
+    visible: "Get started"
+    timeout: 45000
+- tapOn: "Get started"
+- assertVisible: "What.s your designation.*"
+- tapOn: "(?s)${ROLE}\n.*"
+- tapOn: "Continue"
+- extendedWaitUntil:
+    visible: "(?s).*Quick practice.*"
+    timeout: 30000
+- runFlow: dismiss_anr.yaml

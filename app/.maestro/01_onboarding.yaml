@@ -1,0 +1,8 @@
+appId: com.stackprep.stackprep
+name: 01 Onboarding asks only the designation
+---
+- runFlow: subflows/onboard.yaml
+- assertVisible: "(?s)Hi, there.*Backend Developer.*Your experience level.*"
+- assertVisible: "(?s)Junior\n0 - 2 years"
+- assertVisible: "(?s)Review mistakes\n.*"
+- takeScreenshot: screenshots/01_home

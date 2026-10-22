@@ -1,0 +1,39 @@
+appId: com.stackprep.stackprep
+name: 02 Study mode - reveal answer, MCQ, bookmark
+---
+- runFlow: subflows/onboard.yaml
+- scrollUntilVisible:
+    element: "(?s).*System Design\n[0-9]+ questions.*"
+    direction: DOWN
+- tapOn: "(?s).*System Design\n[0-9]+ questions.*"
+- extendedWaitUntil:
+    visible: "(?s).*Topics.*"
+    timeout: 20000
+- tapOn: "(?s).*High Level Architecture & Fundamentals.*questions.*"
+- extendedWaitUntil:
+    visible: "(?s).*What is High Level Design.*"
+    timeout: 20000
+- tapOn: "(?s).*What is High Level Design.*"
+- assertVisible: "(?s).*Think it through first.*"
+- tapOn: "(?s).*Reveal answer.*"
+- assertVisible: "(?s).*HLD.*describes the system.*"
+- takeScreenshot: screenshots/02_answer_revealed
+- scrollUntilVisible:
+    element: "(?s).*I knew it.*"
+    direction: DOWN
+- tapOn: "(?s).*I knew it.*"
+- tapOn: "Next"
+- tapOn: "Next"
+- assertVisible: "(?s).*Which of these is a NON-functional requirement.*"
+- tapOn: "(?s).*The system should respond within 200 ms.*"
+- assertVisible: "(?s).*Correct! Nice work.*"
+- takeScreenshot: screenshots/02_mcq_correct
+- tapOn: "Bookmark"
+- assertVisible: "(?s).*Saved to bookmarks.*"
+- back
+- back
+- back
+- tapOn: "(?s)Saved\nTab.*"
+- extendedWaitUntil:
+    visible: "(?s).*Which of these is a NON-functional requirement.*"
+    timeout: 20000

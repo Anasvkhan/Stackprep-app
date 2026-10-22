@@ -1,0 +1,8 @@
+# Slow emulators sometimes show "System UI isn't responding". Dismiss it if present.
+appId: com.stackprep.stackprep
+---
+- runFlow:
+    when:
+      visible: ".*isn't responding"
+    commands:
+      - tapOn: "Wait"

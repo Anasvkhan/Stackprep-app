@@ -1,0 +1,21 @@
+appId: com.stackprep.stackprep
+name: 05 Theme, designation and level
+---
+- runFlow: subflows/onboard.yaml
+- tapOn: "(?s)Profile\nTab.*"
+- tapOn: "Dark theme"
+- takeScreenshot: screenshots/05_dark_profile
+- tapOn: "(?s)Designation\n.*"
+- tapOn: "(?s)Frontend Developer\n.*"
+- tapOn: "Save"
+- assertVisible: "(?s)Designation\nFrontend Developer.*"
+- tapOn: "(?s)Experience level\n.*"
+- tapOn: "(?s)Senior\n5. years"
+- assertVisible: "(?s)Experience level\nSenior.*"
+- tapOn: "(?s)Home\nTab.*"
+- assertVisible: "(?s).*Senior level.*"
+- assertVisible: "(?s).*Frontend Developer.*"
+- tapOn: "(?s)Explore\nTab.*"
+- scrollUntilVisible:
+    element: "(?s).*React\n.*"
+    direction: DOWN

@@ -1,0 +1,13 @@
+appId: com.stackprep.stackprep
+name: 04 Search questions
+---
+- runFlow: subflows/onboard.yaml
+- tapOn: "Search questions"
+- assertVisible: "(?s).*Popular searches.*"
+- inputText: "kafka"
+- extendedWaitUntil:
+    visible: "(?s).*[0-9]+ results.*"
+    timeout: 20000
+- takeScreenshot: screenshots/04_search
+- tapOn: "(?s)1[.]\n.*"
+- assertVisible: "(?s).*Question 1 of .*"

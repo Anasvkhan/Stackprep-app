@@ -1,0 +1,27 @@
+appId: com.stackprep.stackprep
+name: 03 Quick practice quiz end to end
+---
+- runFlow: subflows/onboard.yaml
+- tapOn: "(?s).*Start now"
+- extendedWaitUntil:
+    visible: "(?s).*1/10.*"
+    timeout: 20000
+- repeat:
+    times: 10
+    commands:
+      - tapOn:
+          id: "option_0"
+      - assertVisible: "(?s).*(Correct!|Wrong answer).*"
+      - tapOn: "(?s).*(Next question|See results).*"
+- extendedWaitUntil:
+    visible: "(?s).*[0-9]+ / 10 correct.*"
+    timeout: 20000
+- takeScreenshot: screenshots/03_results
+- tapOn: "(?s).*Done.*"
+- extendedWaitUntil:
+    visible: "(?s)Review mistakes\n.*"
+    timeout: 20000
+- tapOn: "(?s)Review mistakes\n.*"
+- extendedWaitUntil:
+    visible: "(?s).*(1/[0-9]+|No mistakes to review yet).*"
+    timeout: 20000
