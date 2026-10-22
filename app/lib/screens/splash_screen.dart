@@ -30,13 +30,20 @@ class SplashScreen extends StatelessWidget {
                         .headlineMedium
                         ?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 24),
-                if (error == null)
+                if (error == null) ...[
                   const SizedBox(
                     width: 26,
                     height: 26,
                     child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                  )
-                else ...[
+                  ),
+                  const SizedBox(height: 20),
+                  // Only appears if startup is slow (sleeping server on first launch).
+                  const Text(
+                    'Waking up the server...\nThe first launch can take up to a minute.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, height: 1.5),
+                  ).animate().fadeIn(delay: 5.seconds, duration: 600.ms),
+                ] else ...[
                   Text(error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
                   const SizedBox(height: 16),
                   FilledButton.tonal(onPressed: onRetry, child: const Text('Retry')),

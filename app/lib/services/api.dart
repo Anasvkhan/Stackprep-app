@@ -5,7 +5,7 @@ import '../models/models.dart';
 class Api {
   static final _c = ApiClient.instance;
 
-  static Future<Map<String, dynamic>> meta() => _c.get('/meta');
+  static Future<Map<String, dynamic>> meta({Duration? timeout}) => _c.get('/meta', timeout: timeout);
 
   static Future<List<TrackSummary>> tracks({String? role}) async {
     final res = await _c.get('/tracks', query: {'role': role});

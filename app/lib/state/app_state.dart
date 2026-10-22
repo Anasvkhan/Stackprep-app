@@ -32,16 +32,24 @@ class AppState extends ChangeNotifier {
     startupError = null;
     notifyListeners();
 
-    _prefs ??= await SharedPreferences.getInstance();
-    themeMode = ThemeMode.values[_prefs!.getInt(_themeKey) ?? ThemeMode.system.index];
     _api.onUnauthorized = () => _signOutLocal();
 
+    // Any failure here must end in an error screen with Retry, never an endless spinner.
     try {
-      final meta = await Api.meta();
+      _prefs ??= await SharedPreferences.getInstance();
+      themeMode = ThemeMode.values[_prefs!.getInt(_themeKey) ?? ThemeMode.system.index];
+
+      // A sleeping free-tier server can take ~50s to wake up, so allow extra time here.
+      final meta = await Api.meta(timeout: const Duration(seconds: 75));
       roles = (meta['roles'] as List).map((r) => RoleOption.fromJson(r)).toList();
       categories = (meta['categories'] as List).map((c) => CategoryOption.fromJson(c)).toList();
     } on ApiException catch (e) {
       startupError = e.message;
+      notifyListeners();
+      return;
+    } catch (e) {
+      startupError = 'Something went wrong while starting the app.';
+      debugPrint('Startup failed: $e');
       notifyListeners();
       return;
     }

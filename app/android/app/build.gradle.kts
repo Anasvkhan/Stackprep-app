@@ -34,6 +34,15 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // R8 strips classes that plugins (shared_preferences) reach through JNI, which
+            // crashed release builds at startup. Shrinking only affects the small Kotlin/Java
+            // part of the app, so keep it off.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

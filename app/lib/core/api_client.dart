@@ -34,8 +34,8 @@ class ApiClient {
         if (token != null) 'Authorization': 'Bearer $token',
       };
 
-  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) =>
-      _send(() => http.get(_uri(path, query), headers: _headers));
+  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query, Duration? timeout}) =>
+      _send(() => http.get(_uri(path, query), headers: _headers), timeout: timeout);
 
   Future<Map<String, dynamic>> post(String path, [Object? body]) =>
       _send(() => http.post(_uri(path), headers: _headers, body: jsonEncode(body ?? {})));
@@ -46,10 +46,10 @@ class ApiClient {
   Future<Map<String, dynamic>> delete(String path) =>
       _send(() => http.delete(_uri(path), headers: _headers));
 
-  Future<Map<String, dynamic>> _send(Future<http.Response> Function() request) async {
+  Future<Map<String, dynamic>> _send(Future<http.Response> Function() request, {Duration? timeout}) async {
     http.Response res;
     try {
-      res = await request().timeout(const Duration(seconds: 25));
+      res = await request().timeout(timeout ?? const Duration(seconds: 25));
     } catch (_) {
       throw ApiException('Cannot reach the server. Check your internet connection.');
     }
