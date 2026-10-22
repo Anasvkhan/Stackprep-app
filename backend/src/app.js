@@ -8,6 +8,9 @@ const { notFound, errorHandler } = require('./middleware/error');
 
 const app = express();
 
+// Behind Render's (or any) reverse proxy: use the real client IP for rate limiting.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors());
 app.use(compression());
