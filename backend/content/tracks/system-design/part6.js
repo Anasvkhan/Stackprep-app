@@ -43,13 +43,13 @@ Signature: HMACSHA256(base64url(header) + "." + base64url(payload), secret)
         e: `
 **Session-based (stateful)**
 - Server creates a session (stored in memory/Redis/DB) and sends a **session id cookie**.
-- ✅ Easy to **revoke** (delete session), small cookie, server controls everything.
-- ❌ Server must store sessions; needs shared store (Redis) for multiple servers; CSRF protection needed with cookies.
+- **Pro:** Easy to **revoke** (delete session), small cookie, server controls everything.
+- **Con:** Server must store sessions; needs shared store (Redis) for multiple servers; CSRF protection needed with cookies.
 
 **JWT (stateless)**
 - Server signs a token containing user info; client sends it on each request (\`Authorization: Bearer <token>\`).
-- ✅ No server-side lookup -> scales well, great for microservices/mobile/third-party APIs.
-- ❌ **Hard to revoke** before expiry, larger size, payload visible, key management.
+- **Pro:** No server-side lookup -> scales well, great for microservices/mobile/third-party APIs.
+- **Con:** **Hard to revoke** before expiry, larger size, payload visible, key management.
 
 **Best practice hybrid:** short-lived access JWT (5-15 min) + long-lived **refresh token** stored server-side (revocable, rotated).`,
       },
@@ -147,11 +147,11 @@ JWTs are stateless, so revocation needs some state:
         e: `
 **RBAC (Role-Based Access Control)**
 - Permissions are assigned to **roles**; users get roles. *admin can delete users; editor can edit posts.*
-- ✅ Simple, auditable. ❌ "Role explosion" when rules get fine-grained.
+- **Pro:** Simple, auditable. **Con:** "Role explosion" when rules get fine-grained.
 
 **ABAC (Attribute-Based Access Control)**
 - Decisions based on **attributes** of user, resource, action and environment. *Allow if user.department == doc.department AND time is working hours.*
-- ✅ Very flexible. ❌ Harder to reason about and audit.
+- **Pro:** Very flexible. **Con:** Harder to reason about and audit.
 
 **ReBAC (Relationship-Based)** – permissions from relationships (Google Zanzibar, OpenFGA): "user is a member of a team that owns the folder".
 
@@ -332,16 +332,16 @@ Always return a consistent error body: \`{ "error": { "code": "EMAIL_TAKEN", "me
         q: 'Offset pagination vs cursor (keyset) pagination: which is better at scale?',
         e: `
 **Offset pagination** – \`?page=1000&limit=20\` -> \`LIMIT 20 OFFSET 19980\`
-- ✅ Simple, can jump to any page.
-- ❌ **Slow for deep pages** (DB still scans and discards all skipped rows).
-- ❌ **Inconsistent** results when rows are inserted/deleted between page loads (duplicates/missed items).
+- **Pro:** Simple, can jump to any page.
+- **Con:** **Slow for deep pages** (DB still scans and discards all skipped rows).
+- **Con:** **Inconsistent** results when rows are inserted/deleted between page loads (duplicates/missed items).
 
 **Cursor / keyset pagination** – \`?limit=20&cursor=<last_seen_id_or_timestamp>\`
 ~~~sql
 SELECT * FROM posts WHERE created_at < :cursor ORDER BY created_at DESC LIMIT 20;
 ~~~
-- ✅ **Constant performance** using an index, stable under inserts. Ideal for infinite scroll/feeds.
-- ❌ Can't jump to page N; cursor must be based on a unique, sortable key (often \`(created_at, id)\`).
+- **Pro:** **Constant performance** using an index, stable under inserts. Ideal for infinite scroll/feeds.
+- **Con:** Can't jump to page N; cursor must be based on a unique, sortable key (often \`(created_at, id)\`).
 
 **At scale -> cursor pagination.**`,
       },
@@ -440,16 +440,16 @@ Notes: PUT/DELETE for likes make them idempotent (double-tap safe); cursor pagin
         q: 'Compare short polling, long polling, Server-Sent Events and WebSockets.',
         e: `
 **Short polling:** client asks every N seconds ("anything new?").
-- ✅ Simple. ❌ Wasteful, delayed updates.
+- **Pro:** Simple. **Con:** Wasteful, delayed updates.
 
 **Long polling:** client sends a request; server **holds it open** until data is available or timeout, then the client immediately reconnects.
-- ✅ Near real-time over plain HTTP. ❌ Connection overhead per message.
+- **Pro:** Near real-time over plain HTTP. **Con:** Connection overhead per message.
 
 **Server-Sent Events (SSE):** one long-lived HTTP connection, **server -> client only** stream (\`text/event-stream\`), auto-reconnect built in.
-- ✅ Simple, works through proxies, great for feeds, notifications, AI token streaming. ❌ One direction, text only.
+- **Pro:** Simple, works through proxies, great for feeds, notifications, AI token streaming. **Con:** One direction, text only.
 
 **WebSockets:** full-duplex, bidirectional persistent connection after an HTTP upgrade.
-- ✅ Low latency both ways – chat, gaming, collaboration, trading. ❌ Stateful connections are harder to scale and load balance.
+- **Pro:** Low latency both ways – chat, gaming, collaboration, trading. **Con:** Stateful connections are harder to scale and load balance.
 
 **Webhooks:** server-to-server HTTP callbacks when an event occurs (Stripe payment succeeded).`,
       },
@@ -515,17 +515,17 @@ Notes: PUT/DELETE for likes make them idempotent (double-tap safe); cursor pagin
         t: 'qa', l: 2,
         q: 'How do you generate unique IDs in a distributed system? Compare the options.',
         e: `
-1. **DB auto-increment:** simple, ordered. ❌ Single point of failure, doesn't work across shards (unless using offsets: server 1 odd, server 2 even).
-2. **UUID v4 (random, 128-bit):** generated anywhere, no coordination. ❌ Large, **not sortable**, random inserts fragment B-tree indexes.
-3. **UUID v7 / ULID:** time-ordered + random -> sortable, index friendly, no coordination. ✅ Great modern default.
-4. **Ticket server (Flickr):** central DB hands out IDs (often in batches/ranges). ❌ Needs HA.
+1. **DB auto-increment:** simple, ordered. **Con:** Single point of failure, doesn't work across shards (unless using offsets: server 1 odd, server 2 even).
+2. **UUID v4 (random, 128-bit):** generated anywhere, no coordination. **Con:** Large, **not sortable**, random inserts fragment B-tree indexes.
+3. **UUID v7 / ULID:** time-ordered + random -> sortable, index friendly, no coordination. **Pro:** Great modern default.
+4. **Ticket server (Flickr):** central DB hands out IDs (often in batches/ranges). **Con:** Needs HA.
 5. **Twitter Snowflake (64-bit):**
 ~~~
 | 1 bit sign | 41 bits timestamp (ms) | 10 bits machine id | 12 bits sequence |
 ~~~
    - ~69 years of timestamps, 1024 machines, 4096 IDs per ms per machine
-   - ✅ Sortable by time, fits in BIGINT, no coordination at runtime.
-   - ❌ Needs unique machine ids and clock sync (clock going backwards must be handled).`,
+   - **Pro:** Sortable by time, fits in BIGINT, no coordination at runtime.
+   - **Con:** Needs unique machine ids and clock sync (clock going backwards must be handled).`,
       },
       {
         t: 'mcq', l: 2,

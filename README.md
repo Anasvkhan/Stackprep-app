@@ -1,6 +1,6 @@
 # StackPrep
 
-Interview preparation app for software engineers. Users pick their designation (Frontend, Backend, Full Stack, Software Engineer, Mobile, DevOps) and get tracks for their stack, filtered by experience level (Junior / Mid / Senior). Answers stay hidden until the user reveals them, and MCQ quizzes can be practiced anytime.
+Interview preparation app for software engineers. Users sign up, pick their designation (Frontend, Backend, Full Stack, Software Engineer, Mobile, DevOps) and get tracks for their stack, filtered by experience level (Junior / Mid / Senior). Answers stay hidden until the user reveals them, and MCQ quizzes can be practiced anytime.
 
 ```
 backend/   Node.js + Express + MongoDB API, content and seeder
@@ -9,7 +9,8 @@ app/       Flutter app (Android, iOS, Web, Windows)
 
 ## Features
 
-- Onboarding asks only for the designation; users start as a guest and can create an account later without losing progress
+- Sign up / login, then pick a designation (changeable anytime); progress is saved to the account
+- Fast startup: designations are bundled and the signed-in user is cached, so the app opens without waiting for the server
 - 44 tracks, about 980 questions: System Design (34 topics plus case studies), languages, frameworks, databases, DevOps and CS fundamentals, split by role (for example JavaScript Frontend and JavaScript Backend are separate tracks)
 - Question types: MCQ, Q&A and scenario-based, each tagged Junior / Mid / Senior
 - Study mode: swipe through questions, reveal answers, mark "I knew it" / "Need revision"
@@ -47,12 +48,12 @@ End-to-end flows live in `app/.maestro/`:
 
 | Flow | Covers |
 |---|---|
-| `01_onboarding` | Fresh install asks only the designation |
+| `01_onboarding` | Sign up, pick designation, name shown on home |
 | `02_study_reveal_bookmark` | Track -> topic -> reveal answer, self-assessment, MCQ, bookmark, Saved tab |
 | `03_quiz` | Quick practice: 10 MCQs, results, review mistakes |
 | `04_search` | Search and open a result |
 | `05_profile_preferences` | Dark theme, change designation and level, Explore updates |
-| `06_account` | Guest creates an account, logs out, logs back in |
+| `06_account` | Log out and log back in |
 
 Run with the backend up and the debug APK installed on an emulator:
 
@@ -80,8 +81,7 @@ Each track is a file in `backend/content/tracks/` (System Design is split into `
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/auth/guest` | Create a guest session |
-| POST | `/api/auth/register` | Register (upgrades the current guest) |
+| POST | `/api/auth/register` | Create an account |
 | POST | `/api/auth/login` | Login |
 | GET | `/api/auth/me` | Current user |
 | PATCH | `/api/users/me` | Update designation, level, name |

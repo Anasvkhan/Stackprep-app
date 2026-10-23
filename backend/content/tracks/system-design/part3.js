@@ -27,19 +27,19 @@ module.exports = [
 **Cache-aside (lazy loading)** – most common
 1. App reads cache; on **miss**, reads DB, then writes result to cache.
 2. On write: update DB, then **invalidate** (delete) the cache key.
-- ✅ Only requested data is cached; cache failure isn't fatal.
-- ❌ First request is slow; possible stale data.
+- **Pro:** Only requested data is cached; cache failure isn't fatal.
+- **Con:** First request is slow; possible stale data.
 
 **Read-through** – the cache library itself loads from DB on a miss (app only talks to cache).
 
 **Write-through** – write goes to cache **and** DB synchronously.
-- ✅ Cache always fresh. ❌ Higher write latency, caches data that may never be read.
+- **Pro:** Cache always fresh. **Con:** Higher write latency, caches data that may never be read.
 
 **Write-back (write-behind)** – write to cache only, flushed to DB asynchronously later.
-- ✅ Very fast writes, batches DB writes. ❌ Risk of data loss if cache dies before flush.
+- **Pro:** Very fast writes, batches DB writes. **Con:** Risk of data loss if cache dies before flush.
 
 **Write-around** – write directly to DB, skip cache; cache filled on read.
-- ✅ Avoids polluting cache with write-once data. ❌ Recent writes cause cache misses.`,
+- **Pro:** Avoids polluting cache with write-once data. **Con:** Recent writes cause cache misses.`,
       },
       {
         t: 'mcq', l: 1,
@@ -216,12 +216,12 @@ Typical latency: sub-millisecond; 100K+ ops/sec per instance.`,
         e: `
 **RDB (snapshots)**
 - Point-in-time snapshot of the dataset saved to disk at intervals (\`save 900 1\`), via a forked child process.
-- ✅ Compact, fast restarts, good for backups. ❌ Can lose data since the last snapshot.
+- **Pro:** Compact, fast restarts, good for backups. **Con:** Can lose data since the last snapshot.
 
 **AOF (Append Only File)**
 - Logs every write command; replayed on restart.
 - \`appendfsync always | everysec | no\` – \`everysec\` loses at most ~1 second.
-- ✅ More durable. ❌ Bigger files, slower restart (mitigated by AOF rewrite).
+- **Pro:** More durable. **Con:** Bigger files, slower restart (mitigated by AOF rewrite).
 
 **Hybrid (recommended):** RDB + AOF (\`aof-use-rdb-preamble yes\`).
 **No persistence:** pure cache use case.`,
@@ -428,8 +428,8 @@ ACID favors correctness; BASE favors availability and scale. Many modern databas
 - Design around **access patterns**: "one query = one partition read"
 
 **Trade-offs**
-- ✅ Fast reads, simpler queries, horizontal scale
-- ❌ Data duplication, more complex writes, risk of inconsistency (update the name in many places – often handled asynchronously via events).`,
+- **Pro:** Fast reads, simpler queries, horizontal scale
+- **Con:** Data duplication, more complex writes, risk of inconsistency (update the name in many places – often handled asynchronously via events).`,
       },
       {
         t: 'mcq', l: 2,
@@ -519,11 +519,11 @@ SELECT * FROM users WHERE email = 'a@b.com';   -- uses the index
 A **composite index** covers multiple columns, e.g. \`INDEX (country, city, age)\`. Entries are sorted by country, then city, then age.
 
 **Leftmost prefix rule** – the index can be used for queries that filter on a **left prefix**:
-- ✅ \`WHERE country = 'PK'\`
-- ✅ \`WHERE country = 'PK' AND city = 'Lahore'\`
-- ✅ \`WHERE country = 'PK' AND city = 'Lahore' AND age > 25\`
-- ❌ \`WHERE city = 'Lahore'\` (skips country)
-- ⚠️ \`WHERE country = 'PK' AND age = 30\` uses only the country part
+- Uses the index: \`WHERE country = 'PK'\`
+- Uses the index: \`WHERE country = 'PK' AND city = 'Lahore'\`
+- Uses the index: \`WHERE country = 'PK' AND city = 'Lahore' AND age > 25\`
+- Cannot use the index: \`WHERE city = 'Lahore'\` (skips country)
+- Partly: \`WHERE country = 'PK' AND age = 30\` uses only the country part
 
 **Column order guideline:** equality columns first, then range columns; more selective / most queried columns earlier. A range condition stops the use of columns after it for seeking.`,
       },

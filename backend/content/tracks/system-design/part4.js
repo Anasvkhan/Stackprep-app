@@ -81,14 +81,14 @@ SELECT * FROM seats WHERE id = 7 FOR UPDATE;   -- row lock
 UPDATE seats SET booked_by = 42 WHERE id = 7;
 COMMIT;
 ~~~
-- ✅ Safe under high contention. ❌ Blocking, deadlock risk, lower throughput.
+- **Pro:** Safe under high contention. **Con:** Blocking, deadlock risk, lower throughput.
 
 **Optimistic locking** – don't lock; detect conflicts at write time with a **version** column.
 ~~~sql
 UPDATE products SET stock = 9, version = 6
 WHERE id = 1 AND version = 5;      -- 0 rows updated => someone changed it, retry
 ~~~
-- ✅ No locks, great when conflicts are rare. ❌ Retries under high contention.
+- **Pro:** No locks, great when conflicts are rare. **Con:** Retries under high contention.
 
 **Use:** pessimistic for hot rows (ticket seats, inventory in flash sales); optimistic for typical web edits (profile updates, documents).`,
       },
@@ -137,7 +137,7 @@ Each microservice owns its database, so one local ACID transaction cannot span s
 **Two-Phase Commit (2PC)**
 1. *Prepare:* coordinator asks all participants "can you commit?" – they lock resources and vote.
 2. *Commit:* if all vote yes, coordinator tells everyone to commit; otherwise abort.
-- ✅ Atomic. ❌ Blocking (participants hold locks waiting for coordinator), coordinator SPOF, poor latency, not supported by many NoSQL/queues.
+- **Pro:** Atomic. **Con:** Blocking (participants hold locks waiting for coordinator), coordinator SPOF, poor latency, not supported by many NoSQL/queues.
 
 **Saga pattern** – a sequence of local transactions; each step publishes an event triggering the next. On failure, run **compensating transactions** to undo previous steps.
 ~~~
@@ -146,7 +146,7 @@ Order created -> Payment charged -> Inventory reserved -> Shipping scheduled
 ~~~
 - **Choreography:** services react to each other's events (decentralized, harder to track).
 - **Orchestration:** a central orchestrator (e.g. Temporal, AWS Step Functions) tells services what to do.
-- ✅ No distributed locks, scalable. ❌ Eventual consistency, need idempotency and careful compensation design.
+- **Pro:** No distributed locks, scalable. **Con:** Eventual consistency, need idempotency and careful compensation design.
 
 Combine with the **Outbox pattern** to atomically save state + publish events.`,
       },
@@ -225,11 +225,11 @@ WHERE flight_id = 9 AND seat_no = '12A' AND status = 'AVAILABLE';
 **Primary-Replica (master-slave)**
 - All **writes** go to the primary; changes stream to replicas (WAL/binlog).
 - **Reads** can go to replicas.
-- ✅ Read scaling, failover, backups from replicas. ❌ Replication lag, primary is a write bottleneck.
+- **Pro:** Read scaling, failover, backups from replicas. **Con:** Replication lag, primary is a write bottleneck.
 
 **Multi-primary (master-master)**
 - Multiple nodes accept writes and replicate to each other.
-- ✅ Write availability, multi-region writes. ❌ **Write conflicts** need resolution (last write wins, CRDTs, app logic), more complexity.
+- **Pro:** Write availability, multi-region writes. **Con:** **Write conflicts** need resolution (last write wins, CRDTs, app logic), more complexity.
 
 **Leaderless (Dynamo-style)**
 - Any replica accepts reads/writes; quorums (R + W > N) ensure consistency (Cassandra, DynamoDB).`,
@@ -247,11 +247,11 @@ WHERE flight_id = 9 AND seat_no = '12A' AND status = 'AVAILABLE';
         e: `
 **Synchronous**
 - Primary waits for replica(s) to confirm before acknowledging the commit.
-- ✅ No data loss on failover (RPO = 0). ❌ Higher write latency; if the replica is down, writes may block.
+- **Pro:** No data loss on failover (RPO = 0). **Con:** Higher write latency; if the replica is down, writes may block.
 
 **Asynchronous**
 - Primary acknowledges immediately; replicas catch up later.
-- ✅ Fast writes, replica failures don't affect the primary. ❌ **Replication lag**; recent writes can be lost if the primary crashes.
+- **Pro:** Fast writes, replica failures don't affect the primary. **Con:** **Replication lag**; recent writes can be lost if the primary crashes.
 
 **Semi-synchronous**
 - Wait for at least **one** replica (e.g. MySQL semi-sync, Postgres \`synchronous_standby_names\` with ANY 1). Common compromise.`,
@@ -375,16 +375,16 @@ users with id hash % 4 == 1 -> Shard 1
         q: 'Explain the main sharding strategies.',
         e: `
 **1. Range-based** – shard by ranges of a key (A-F, G-M; dates; id 1-1M).
-- ✅ Efficient range queries. ❌ Hotspots (all new data goes to the latest range).
+- **Pro:** Efficient range queries. **Con:** Hotspots (all new data goes to the latest range).
 
 **2. Hash-based** – \`shard = hash(key) % N\`.
-- ✅ Even distribution. ❌ Range queries hit all shards; changing N remaps almost all keys (use **consistent hashing** to fix).
+- **Pro:** Even distribution. **Con:** Range queries hit all shards; changing N remaps almost all keys (use **consistent hashing** to fix).
 
 **3. Directory / lookup-based** – a lookup service maps each key (or tenant) to a shard.
-- ✅ Flexible, easy to move tenants. ❌ Lookup service is an extra hop and potential SPOF (cache it).
+- **Pro:** Flexible, easy to move tenants. **Con:** Lookup service is an extra hop and potential SPOF (cache it).
 
 **4. Geo-based** – shard by region/country.
-- ✅ Data locality & residency compliance. ❌ Uneven sizes.
+- **Pro:** Data locality & residency compliance. **Con:** Uneven sizes.
 
 **5. Entity/tenant-based** – each large customer gets its own shard (SaaS).`,
       },
@@ -400,7 +400,7 @@ users with id hash % 4 == 1 -> Shard 1
         q: 'How do you choose a good shard key?',
         e: `
 A good shard key has:
-- **High cardinality:** many distinct values (user_id ✅, country ❌).
+- **High cardinality:** many distinct values (user_id is good, country is bad).
 - **Even distribution:** no single value gets most traffic/data.
 - **Query alignment:** most queries include the key so they hit **one shard** (avoid scatter-gather).
 - **Stable:** the value doesn't change (changing it = moving data).

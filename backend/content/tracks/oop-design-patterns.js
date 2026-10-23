@@ -53,9 +53,9 @@ class Car {
   start() { this.engine.start(); }
 }
 ~~~
-- ✅ Flexible – swap components (ElectricEngine vs PetrolEngine), even at runtime
-- ✅ Easier testing (inject mocks)
-- ✅ Avoids huge class hierarchies
+- **Pro:** Flexible – swap components (ElectricEngine vs PetrolEngine), even at runtime
+- **Pro:** Easier testing (inject mocks)
+- **Pro:** Avoids huge class hierarchies
 
 Use inheritance for true "is-a" relationships with stable behavior; prefer composition otherwise.`,
         },

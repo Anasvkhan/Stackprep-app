@@ -104,10 +104,10 @@ OnPush + immutable data greatly reduces work in large apps.
           q: 'What is the difference between switchMap, mergeMap, concatMap and exhaustMap?',
           e: `
 All map each source value to an inner Observable, but differ in concurrency:
-- **switchMap:** cancels the previous inner observable when a new value arrives. ✅ Search typeahead (only latest request matters).
-- **mergeMap:** runs all inner observables concurrently. ✅ Parallel independent requests.
-- **concatMap:** queues and runs one at a time in order. ✅ Ordered saves.
-- **exhaustMap:** ignores new values while an inner observable is active. ✅ Prevent double-submit on a login button.`,
+- **switchMap:** cancels the previous inner observable when a new value arrives. Use for: Search typeahead (only latest request matters).
+- **mergeMap:** runs all inner observables concurrently. Use for: Parallel independent requests.
+- **concatMap:** queues and runs one at a time in order. Use for: Ordered saves.
+- **exhaustMap:** ignores new values while an inner observable is active. Use for: Prevent double-submit on a login button.`,
         },
         {
           t: 'mcq', l: 2,

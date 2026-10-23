@@ -19,12 +19,12 @@ module.exports = {
           q: 'What is the difference between a monolith and microservices?',
           e: `
 **Monolith:** one deployable application containing all features, usually one database.
-- ✅ Simple to develop, test, deploy and debug; no network calls between modules; easy transactions.
-- ❌ Grows hard to understand; one bug can take down everything; scaling is all-or-nothing; slow deploys for big teams.
+- **Pro:** Simple to develop, test, deploy and debug; no network calls between modules; easy transactions.
+- **Con:** Grows hard to understand; one bug can take down everything; scaling is all-or-nothing; slow deploys for big teams.
 
 **Microservices:** many small services, each owning one business capability and its own data, deployed independently.
-- ✅ Independent deploys and scaling, team autonomy, tech flexibility, fault isolation.
-- ❌ Distributed system complexity: network failures, eventual consistency, distributed transactions, observability, DevOps overhead.
+- **Pro:** Independent deploys and scaling, team autonomy, tech flexibility, fault isolation.
+- **Con:** Distributed system complexity: network failures, eventual consistency, distributed transactions, observability, DevOps overhead.
 
 **Modular monolith** is a great middle ground: one deployable with strict module boundaries – easy to split later.`,
         },
@@ -58,12 +58,12 @@ module.exports = {
           q: 'Synchronous vs asynchronous communication between microservices?',
           e: `
 **Synchronous (REST/gRPC request-response)**
-- ✅ Simple, immediate response, easy to reason about.
-- ❌ Temporal coupling: if the callee is down/slow, the caller fails; latency adds up in call chains; cascading failures.
+- **Pro:** Simple, immediate response, easy to reason about.
+- **Con:** Temporal coupling: if the callee is down/slow, the caller fails; latency adds up in call chains; cascading failures.
 
 **Asynchronous (events/messages via Kafka, RabbitMQ, SQS)**
-- ✅ Loose coupling, resilience (queue buffers outages), easy fan-out to many consumers, load leveling.
-- ❌ Eventual consistency, harder debugging/tracing, need idempotency, ordering and schema evolution.
+- **Pro:** Loose coupling, resilience (queue buffers outages), easy fan-out to many consumers, load leveling.
+- **Con:** Eventual consistency, harder debugging/tracing, need idempotency, ordering and schema evolution.
 
 **Guideline:** use sync for queries needing an immediate answer (get price); async for commands/events where the caller doesn't need to wait (order placed -> email, inventory, analytics). Add timeouts, retries and circuit breakers to sync calls.`,
         },

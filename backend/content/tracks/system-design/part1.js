@@ -90,12 +90,12 @@ Always clarify both at the start of a design interview; NFRs drive the architect
         q: 'What is the difference between vertical scaling and horizontal scaling? When would you choose each?',
         e: `
 **Vertical scaling (scale up):** add more CPU/RAM/disk to one machine.
-- ✅ Simple, no code changes, no distributed system problems
-- ❌ Hardware limit, expensive at the top end, single point of failure, downtime to upgrade
+- **Pro:** Simple, no code changes, no distributed system problems
+- **Con:** Hardware limit, expensive at the top end, single point of failure, downtime to upgrade
 
 **Horizontal scaling (scale out):** add more machines and distribute load.
-- ✅ Near-unlimited scale, fault tolerance, commodity hardware
-- ❌ Needs load balancing, stateless services, data partitioning, deals with consistency and network issues
+- **Pro:** Near-unlimited scale, fault tolerance, commodity hardware
+- **Con:** Needs load balancing, stateless services, data partitioning, deals with consistency and network issues
 
 **When to choose**
 - Early stage / databases that are hard to distribute -> scale vertically first.

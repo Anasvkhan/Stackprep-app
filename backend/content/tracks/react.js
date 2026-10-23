@@ -87,14 +87,14 @@ Changing either triggers a re-render. Data flows **down** via props; events flow
 const [email, setEmail] = useState('');
 <input value={email} onChange={(e) => setEmail(e.target.value)} />
 ~~~
-✅ Single source of truth, instant validation. ❌ Re-render per keystroke.
+**Pro:** Single source of truth, instant validation. **Con:** Re-render per keystroke.
 
 **Uncontrolled:** the DOM keeps the value; read it with a ref when needed.
 ~~~jsx
 const ref = useRef();
 <input defaultValue="" ref={ref} />  // ref.current.value on submit
 ~~~
-✅ Less code, fewer renders (React Hook Form uses this approach). ❌ Harder to react to every change.`,
+**Pro:** Less code, fewer renders (React Hook Form uses this approach). **Con:** Harder to react to every change.`,
         },
         {
           t: 'mcq', l: 1,

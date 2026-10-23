@@ -7,7 +7,7 @@ import '../state/app_state.dart';
 import '../widgets/brand.dart';
 import '../widgets/common.dart';
 
-/// Login / create account. When a guest creates an account, their progress is kept.
+/// Sign up / login. Every user has an account; progress is saved to it.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key, this.startWithLogin = false});
   final bool startWithLogin;
@@ -55,7 +55,6 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final isGuest = context.watch<AppState>().user?.isGuest == true;
 
     return Scaffold(
       appBar: AppBar(),
@@ -81,9 +80,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 Text(
                   _login
                       ? 'Login to continue your preparation.'
-                      : isGuest
-                          ? 'Save your progress and continue on any device.'
-                          : 'Track your progress across devices.',
+                      : 'Your progress is saved to your account and works on any device.',
                   style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor),
                 ),
                 const SizedBox(height: 28),

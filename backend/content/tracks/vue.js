@@ -44,9 +44,9 @@ This gives fine-grained updates without a manual dependency list. Vue 2 used \`O
 **Options API:** organize code by option type (\`data\`, \`methods\`, \`computed\`, \`watch\`). Easy for beginners; logic for one feature is scattered across options.
 
 **Composition API** (\`setup()\` / \`<script setup>\`): organize code by **feature** using \`ref\`, \`computed\`, \`watch\`, lifecycle functions.
-- ✅ Better logic reuse via **composables** (\`useMouse()\`, \`useFetch()\`)
-- ✅ Better TypeScript inference
-- ✅ Scales better for large components
+- **Pro:** Better logic reuse via **composables** (\`useMouse()\`, \`useFetch()\`)
+- **Pro:** Better TypeScript inference
+- **Pro:** Scales better for large components
 
 Both are supported; Composition API + \`<script setup>\` is the modern default.`,
         },

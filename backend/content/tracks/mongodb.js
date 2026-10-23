@@ -33,13 +33,13 @@ module.exports = {
 - Data is accessed together (an order and its line items)
 - One-to-few relationship, child doesn't make sense alone
 - Bounded size (documents max **16 MB**)
-- ✅ One read, atomic single-document updates
+- **Pro:** One read, atomic single-document updates
 
 **Reference** (store ids) when:
 - One-to-many with large/unbounded "many" (a user's millions of logs)
 - Many-to-many
 - Child is accessed independently or updated frequently by itself
-- ✅ No huge documents, no duplication
+- **Pro:** No huge documents, no duplication
 
 **Rule:** model around **access patterns** ("data that is accessed together should be stored together"). Patterns: subset pattern, bucket pattern (time-series), extended reference, computed pattern.`,
         },

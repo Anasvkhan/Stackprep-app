@@ -3,10 +3,9 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, trim: true, default: 'Guest' },
-    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true },
+    name: { type: String, trim: true, required: true },
+    email: { type: String, trim: true, lowercase: true, unique: true, sparse: true, required: true },
     password: { type: String, select: false },
-    isGuest: { type: Boolean, default: false },
     role: { type: String, default: null }, // designation picked in onboarding
     level: { type: Number, enum: [1, 2, 3], default: 1 },
     streak: {

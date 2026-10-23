@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
@@ -9,20 +8,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const respond = (res, user, status = 200) =>
   res.status(status).json({ token: signToken(user), user });
-
-// If the caller is currently a guest, return that guest so we can upgrade it in place
-// (keeps their progress) instead of creating a brand new account.
-async function currentGuest(req) {
-  const header = req.headers.authorization || '';
-  if (!header.startsWith('Bearer ')) return null;
-  try {
-    const { id } = jwt.verify(header.slice(7), process.env.JWT_SECRET);
-    const user = await User.findById(id);
-    return user && user.isGuest ? user : null;
-  } catch {
-    return null;
-  }
-}
 
 router.post(
   '/register',
@@ -35,10 +20,7 @@ router.post(
     const exists = await User.exists({ email: email.toLowerCase() });
     if (exists) throw new ApiError(409, 'Email is already registered');
 
-    const guest = await currentGuest(req);
-    const user = guest || new User();
-    Object.assign(user, { name: name.trim(), email, password, isGuest: false });
-    await user.save();
+    const user = await User.create({ name: name.trim(), email, password });
     respond(res, user, 201);
   })
 );
@@ -53,14 +35,6 @@ router.post(
       throw new ApiError(401, 'Incorrect email or password');
     }
     respond(res, user);
-  })
-);
-
-router.post(
-  '/guest',
-  asyncHandler(async (req, res) => {
-    const user = await User.create({ name: 'Guest', isGuest: true });
-    respond(res, user, 201);
   })
 );
 

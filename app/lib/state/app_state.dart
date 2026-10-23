@@ -1,24 +1,30 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/api_client.dart';
 import '../models/models.dart';
-import '../services/api.dart';
 
 enum AuthStatus { loading, signedOut, needsRole, ready }
 
-/// Holds the session (token + user), app metadata, theme mode and a
-/// `dataVersion` counter that screens watch to know when to refetch.
+/// Holds the session (token + user), theme mode and a `dataVersion` counter
+/// that screens watch to know when to refetch.
+///
+/// Startup never waits for the server: designations are bundled in the app and
+/// the signed-in user is cached on the device, then refreshed in the background.
+/// This matters because the free backend sleeps when idle and takes ~50s to wake.
 class AppState extends ChangeNotifier {
   static const _tokenKey = 'sp_token';
+  static const _userKey = 'sp_user';
   static const _themeKey = 'sp_theme';
 
   final _api = ApiClient.instance;
 
   AuthStatus status = AuthStatus.loading;
   AppUser? user;
-  List<RoleOption> roles = [];
-  List<CategoryOption> categories = [];
+  final List<RoleOption> roles = RoleOption.all;
+  final List<CategoryOption> categories = CategoryOption.all;
   ThemeMode themeMode = ThemeMode.system;
   int dataVersion = 0;
   String? startupError;
@@ -39,60 +45,51 @@ class AppState extends ChangeNotifier {
       _prefs ??= await SharedPreferences.getInstance();
       themeMode = ThemeMode.values[_prefs!.getInt(_themeKey) ?? ThemeMode.system.index];
 
-      // A sleeping free-tier server can take ~50s to wake up, so allow extra time here.
-      final meta = await Api.meta(timeout: const Duration(seconds: 75));
-      roles = (meta['roles'] as List).map((r) => RoleOption.fromJson(r)).toList();
-      categories = (meta['categories'] as List).map((c) => CategoryOption.fromJson(c)).toList();
+      final token = _prefs!.getString(_tokenKey);
+      if (token == null) {
+        status = AuthStatus.signedOut;
+        notifyListeners();
+        return;
+      }
+      _api.token = token;
+
+      final cached = _prefs!.getString(_userKey);
+      if (cached != null) {
+        // Show the app immediately with the saved profile, then sync with the server.
+        _applyUser(jsonDecode(cached) as Map<String, dynamic>);
+        refreshUser();
+        return;
+      }
+
+      // Signed in but nothing cached (older install): fetch once, allowing time for a cold server.
+      final res = await _api.get('/auth/me', timeout: const Duration(seconds: 75));
+      await _setUser(res['user']);
     } on ApiException catch (e) {
+      if (e.status == 401) return _signOutLocal();
       startupError = e.message;
       notifyListeners();
-      return;
     } catch (e) {
       startupError = 'Something went wrong while starting the app.';
       debugPrint('Startup failed: $e');
       notifyListeners();
-      return;
-    }
-
-    final token = _prefs!.getString(_tokenKey);
-    if (token == null) {
-      status = AuthStatus.signedOut;
-      notifyListeners();
-      return;
-    }
-    _api.token = token;
-    try {
-      final res = await _api.get('/auth/me');
-      _setUser(res['user']);
-    } on ApiException catch (e) {
-      if (e.status == 401) {
-        _signOutLocal();
-      } else {
-        startupError = e.message;
-        notifyListeners();
-      }
     }
   }
 
-  void _setUser(Map<String, dynamic> json) {
+  void _applyUser(Map<String, dynamic> json) {
     user = AppUser.fromJson(json);
     status = user!.role == null ? AuthStatus.needsRole : AuthStatus.ready;
     notifyListeners();
   }
 
+  Future<void> _setUser(Map<String, dynamic> json) async {
+    _applyUser(json);
+    await _prefs?.setString(_userKey, jsonEncode(json));
+  }
+
   Future<void> _saveSession(Map<String, dynamic> res) async {
     _api.token = res['token'];
     await _prefs?.setString(_tokenKey, res['token']);
-    _setUser(res['user']);
-  }
-
-  /// Onboarding: create a guest account with the chosen designation.
-  Future<void> startAsGuest(String roleId) async {
-    final res = await _api.post('/auth/guest');
-    _api.token = res['token'];
-    await _prefs?.setString(_tokenKey, res['token']);
-    final upd = await _api.patch('/users/me', {'role': roleId});
-    _setUser(upd['user']);
+    await _setUser(res['user']);
   }
 
   Future<void> login(String email, String password) async {
@@ -101,12 +98,10 @@ class AppState extends ChangeNotifier {
     bumpData();
   }
 
-  /// Registers a new account. If the current user is a guest, the guest is upgraded and keeps progress.
+  /// Creates the account. The user picks a designation right after.
   Future<void> register(String name, String email, String password) async {
     final res = await _api.post('/auth/register', {'name': name, 'email': email, 'password': password});
-    final hadRole = user?.role;
     await _saveSession(res);
-    if (user?.role == null && hadRole != null) await updateProfile(role: hadRole);
   }
 
   Future<void> updateProfile({String? role, int? level, String? name}) async {
@@ -115,14 +110,16 @@ class AppState extends ChangeNotifier {
       'level': ?level,
       'name': ?name,
     });
-    _setUser(res['user']);
+    await _setUser(res['user']);
     bumpData();
   }
 
+  /// Syncs the cached profile with the server. Failures (offline, sleeping server) are ignored;
+  /// an expired session triggers sign-out through [ApiClient.onUnauthorized].
   Future<void> refreshUser() async {
     try {
-      final res = await _api.get('/auth/me');
-      _setUser(res['user']);
+      final res = await _api.get('/auth/me', timeout: const Duration(seconds: 75));
+      await _setUser(res['user']);
     } catch (_) {}
   }
 
@@ -142,6 +139,7 @@ class AppState extends ChangeNotifier {
   void _signOutLocal() {
     _api.token = null;
     _prefs?.remove(_tokenKey);
+    _prefs?.remove(_userKey);
     user = null;
     status = AuthStatus.signedOut;
     notifyListeners();

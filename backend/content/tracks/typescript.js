@@ -126,7 +126,7 @@ function getProp<T, K extends keyof T>(obj: T, key: K): T[K] {
   return obj[key];
 }
 getProp({ id: 1, name: 'A' }, 'name'); // string
-getProp({ id: 1 }, 'age');             // ❌ compile error
+getProp({ id: 1 }, 'age');             // compile error
 
 interface ApiResponse<T> { data: T; error?: string }
 ~~~`,

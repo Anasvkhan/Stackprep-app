@@ -81,16 +81,29 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final name = user.isGuest ? 'there' : user.name.split(' ').first;
+    final name = user.name.trim().split(RegExp(r'\s+')).first;
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hi, $name 👋', style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Text('Hi, $name',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
               const SizedBox(height: 2),
-              Text(role, style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor)),
+              Row(
+                children: [
+                  Icon(Icons.work_outline_rounded, size: 16, color: t.hintColor),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(role,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor)),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -110,7 +123,7 @@ class _Header extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('🔥', style: TextStyle(fontSize: 16))
+                const Icon(Icons.local_fire_department_rounded, size: 18, color: AppColors.warning)
                     .animate(onPlay: (c) => streak > 0 ? c.repeat(reverse: true) : null)
                     .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 700.ms),
                 const SizedBox(width: 4),

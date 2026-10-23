@@ -1,4 +1,4 @@
-# Fresh install -> Get started -> pick designation -> home.
+# Fresh install -> Get started -> sign up -> pick designation -> home.
 # Note: Flutter merges a card's texts into one accessibility node ("Title\nSubtitle"),
 # so selectors use (?s) regexes that span newlines.
 appId: com.stackprep.stackprep
@@ -12,7 +12,20 @@ env:
     visible: "Get started"
     timeout: 45000
 - tapOn: "Get started"
-- assertVisible: "What.s your designation.*"
+- assertVisible: "(?s).*Create your account.*"
+- evalScript: ${output.email = 'maestro' + Date.now() + '@test.com'}
+- tapOn: "(?s).*Full name.*"
+- inputText: "Maestro Tester"
+- tapOn: "(?s).*Email.*"
+- inputText: ${output.email}
+- tapOn: "(?s).*Password.*"
+- inputText: "secret123"
+- hideKeyboard
+- tapOn: "Create account"
+- extendedWaitUntil:
+    visible: "What.s your designation.*"
+    timeout: 75000
+- assertVisible: "(?s).*Welcome, Maestro.*"
 - tapOn: "(?s)${ROLE}\n.*"
 - tapOn: "Continue"
 - extendedWaitUntil:

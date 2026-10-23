@@ -93,7 +93,7 @@ merge({}, JSON.parse('{"__proto__": {"isAdmin": true}}'));
 ~~~js
 fs.readFile('a.txt', (err, data) => { if (err) return done(err); /* ... */ });
 ~~~
-- ❌ Callback hell, inversion of control, easy to forget error handling.
+- **Con:** Callback hell, inversion of control, easy to forget error handling.
 
 **Promises**
 - Chainable, single resolution, centralized \`.catch\`.

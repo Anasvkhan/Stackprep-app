@@ -7,7 +7,6 @@ import '../services/api.dart';
 import '../state/app_state.dart';
 import '../widgets/async_view.dart';
 import '../widgets/common.dart';
-import 'auth_screen.dart';
 import 'role_select_screen.dart';
 import 'track_screen.dart';
 
@@ -101,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
                       ListTile(
                         leading: const Icon(Icons.logout_rounded, color: AppColors.danger),
                         title: const Text('Log out'),
-                        onTap: () => _confirmLogout(context, user.isGuest),
+                        onTap: () => _confirmLogout(context),
                       ),
                     ],
                   ),
@@ -168,14 +167,12 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _confirmLogout(BuildContext context, bool isGuest) async {
+  Future<void> _confirmLogout(BuildContext context) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Log out?'),
-        content: Text(isGuest
-            ? 'You are using a guest account. Logging out will permanently lose your progress. Create an account first to keep it.'
-            : 'You can log back in anytime with your email.'),
+        content: const Text('Your progress is saved to your account. You can log back in anytime with your email.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Log out')),
@@ -193,49 +190,31 @@ class _AccountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final initials = user.isGuest
-        ? '?'
-        : user.name.trim().split(RegExp(r'\s+')).take(2).map((p) => p.isEmpty ? '' : p[0].toUpperCase()).join();
+    final initials =
+        user.name.trim().split(RegExp(r'\s+')).take(2).map((p) => p.isEmpty ? '' : p[0].toUpperCase()).join();
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(gradient: AppColors.gradient, borderRadius: BorderRadius.circular(22)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.white,
-                child: Text(initials,
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 20)),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(user.isGuest ? 'Guest user' : user.name,
-                        style: t.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
-                    Text(user.email ?? 'Progress is saved on this device only',
-                        style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
-                  ],
-                ),
-              ),
-            ],
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.white,
+            child: Text(initials,
+                style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 20)),
           ),
-          if (user.isGuest) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: AppColors.primary),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AuthScreen())),
-                icon: const Icon(Icons.cloud_upload_rounded),
-                label: const Text('Create account to save progress'),
-              ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(user.name,
+                    style: t.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
+                if (user.email != null)
+                  Text(user.email!, style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -263,7 +242,7 @@ class _ProgressSection extends StatelessWidget {
             const SizedBox(width: 10),
             _mini(context, '${progress.quizzes}', 'Quizzes'),
             const SizedBox(width: 10),
-            _mini(context, '${progress.streak.current}🔥', 'Streak'),
+            _mini(context, '${progress.streak.current}', 'Day streak'),
           ],
         ),
         const SizedBox(height: 14),
@@ -271,7 +250,7 @@ class _ProgressSection extends StatelessWidget {
           AppCard(
             child: Row(
               children: [
-                const Text('🚀', style: TextStyle(fontSize: 28)),
+                const IconBox(icon: Icons.rocket_launch_rounded, color: AppColors.primary, size: 44),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text('Start practicing and your track-wise progress will show up here.',

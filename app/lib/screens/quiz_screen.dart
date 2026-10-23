@@ -407,7 +407,7 @@ class _Feedback extends StatelessWidget {
       decoration: BoxDecoration(color: c.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
       child: Row(
         children: [
-          Text(correct ? '🎉' : '😅', style: const TextStyle(fontSize: 20)),
+          Icon(correct ? Icons.check_circle_rounded : Icons.cancel_rounded, color: c, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(correct ? 'Correct!' : 'Wrong answer',

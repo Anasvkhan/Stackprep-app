@@ -49,7 +49,7 @@ class ApiClient {
   Future<Map<String, dynamic>> _send(Future<http.Response> Function() request, {Duration? timeout}) async {
     http.Response res;
     try {
-      res = await request().timeout(timeout ?? const Duration(seconds: 25));
+      res = await request().timeout(timeout ?? const Duration(seconds: 60));
     } catch (_) {
       throw ApiException('Cannot reach the server. Check your internet connection.');
     }

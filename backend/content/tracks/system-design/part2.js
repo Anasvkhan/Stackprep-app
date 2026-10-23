@@ -526,14 +526,14 @@ Examples: Cloudflare, Akamai, AWS CloudFront, Fastly, Google Cloud CDN.`,
         e: `
 **Pull CDN**
 - Edge fetches content from origin on the **first request** (lazy), then caches it.
-- ✅ Easy setup, only popular content is cached.
-- ❌ First user per edge gets slower response; origin must be available.
+- **Pro:** Easy setup, only popular content is cached.
+- **Con:** First user per edge gets slower response; origin must be available.
 - Best for: high-traffic sites with lots of content.
 
 **Push CDN**
 - You **upload** content to the CDN proactively.
-- ✅ Content is ready before requests; good for large files that rarely change.
-- ❌ You manage uploads/expiry; uses more storage.
+- **Pro:** Content is ready before requests; good for large files that rarely change.
+- **Con:** You manage uploads/expiry; uses more storage.
 - Best for: low-traffic sites, big downloads, video libraries.`,
       },
       {

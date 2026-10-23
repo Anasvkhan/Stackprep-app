@@ -283,24 +283,24 @@ When exceeded, respond with **HTTP 429 Too Many Requests** plus headers like \`R
         e: `
 **1. Token bucket** (most popular – AWS, Stripe)
 - Bucket holds up to B tokens, refilled at R tokens/sec. Each request takes a token; empty -> reject.
-- ✅ Allows **bursts** up to B, smooth average rate. Memory efficient.
+- **Pro:** Allows **bursts** up to B, smooth average rate. Memory efficient.
 
 **2. Leaky bucket**
 - Requests enter a FIFO queue processed at a **constant rate**; overflow is dropped.
-- ✅ Smooth output rate (good for protecting downstream). ❌ Bursts get queued/dropped.
+- **Pro:** Smooth output rate (good for protecting downstream). **Con:** Bursts get queued/dropped.
 
 **3. Fixed window counter**
 - Count requests per window (e.g. per minute: key \`user:42:12:05\`).
-- ✅ Simple. ❌ **Boundary burst:** 100 requests at 12:00:59 + 100 at 12:01:00 = 200 in 2 seconds.
+- **Pro:** Simple. **Con:** **Boundary burst:** 100 requests at 12:00:59 + 100 at 12:01:00 = 200 in 2 seconds.
 
 **4. Sliding window log**
 - Store timestamps of each request (sorted set); count those within the last 60s.
-- ✅ Accurate. ❌ Memory heavy (one entry per request).
+- **Pro:** Accurate. **Con:** Memory heavy (one entry per request).
 
 **5. Sliding window counter**
 - Weighted mix of current and previous fixed windows:
   \`count = current + previous × (overlap % of previous window)\`
-- ✅ Accurate enough, low memory. Used by Cloudflare.`,
+- **Pro:** Accurate enough, low memory. Used by Cloudflare.`,
       },
       {
         t: 'mcq', l: 2,
@@ -530,12 +530,12 @@ In dynamic environments (containers, auto scaling), service instances come and g
 **Client-side discovery**
 - The client queries the registry, gets a list of instances and **load balances itself**.
 - e.g. Netflix Eureka + Ribbon, gRPC with xDS, Consul client libraries.
-- ✅ No extra hop, smart LB decisions. ❌ Discovery logic in every client/language.
+- **Pro:** No extra hop, smart LB decisions. **Con:** Discovery logic in every client/language.
 
 **Server-side discovery**
 - The client calls a **load balancer/router**, which queries the registry and forwards the request.
 - e.g. AWS ALB + ECS, **Kubernetes Services (kube-proxy)**, Consul + Nginx.
-- ✅ Clients stay simple. ❌ Extra network hop; LB must be HA.
+- **Pro:** Clients stay simple. **Con:** Extra network hop; LB must be HA.
 
 **Service mesh** moves client-side discovery into a sidecar proxy, giving benefits of both.`,
       },

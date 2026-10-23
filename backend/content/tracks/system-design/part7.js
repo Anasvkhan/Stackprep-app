@@ -32,16 +32,16 @@ GET  /{code}        -> 301/302 Location: longUrl
         q: 'URL shortener: how do you generate the short code? Compare hashing vs counter-based approaches.',
         e: `
 **1. Hash + truncate:** \`base62(md5(longUrl))[0:7]\`
-- ✅ Same URL -> same code (dedupe). ❌ **Collisions** – must check DB and retry with salt; extra read per write.
+- **Pro:** Same URL -> same code (dedupe). **Con:** **Collisions** – must check DB and retry with salt; extra read per write.
 
 **2. Counter + Base62 encoding** (most common)
 - Unique numeric id (DB sequence, Snowflake, or **range allocation**) -> base62 encode: id 125 -> "21".
-- ✅ No collisions, short codes. ❌ Sequential codes are **guessable** (scramble with a bijective shuffle or add random bits).
+- **Pro:** No collisions, short codes. **Con:** Sequential codes are **guessable** (scramble with a bijective shuffle or add random bits).
 - **Range allocation:** each app server gets a block of 1M ids from a coordinator (ZooKeeper/DB) -> no per-request coordination.
 
 **3. Pre-generated key service (KGS)**
 - Offline service generates random unique 7-char keys into a DB; app servers take batches of unused keys.
-- ✅ Fast, random, no collisions. ❌ Extra service; must handle keys lost when a server crashes (acceptable).
+- **Pro:** Fast, random, no collisions. **Con:** Extra service; must handle keys lost when a server crashes (acceptable).
 
 ~~~js
 const ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -334,12 +334,12 @@ An operation is **idempotent** if performing it multiple times has the **same ef
 **Event Sourcing**
 - Store **every state change as an immutable event** (\`AccountOpened\`, \`MoneyDeposited\`, \`MoneyWithdrawn\`) instead of only the current state.
 - Current state = replay of events (with periodic **snapshots** for speed).
-- ✅ Full audit trail, time travel/debugging, rebuild new read models anytime. ❌ Complexity, event schema evolution, eventual consistency of projections.
+- **Pro:** Full audit trail, time travel/debugging, rebuild new read models anytime. **Con:** Complexity, event schema evolution, eventual consistency of projections.
 
 **CQRS (Command Query Responsibility Segregation)**
 - Separate the **write model** (commands, validation, normalized/event store) from **read models** (denormalized views optimized for queries, e.g. Elasticsearch, Redis, read tables).
 - Read models are updated asynchronously from events.
-- ✅ Scale reads/writes independently, optimized queries. ❌ Eventual consistency, more moving parts.
+- **Pro:** Scale reads/writes independently, optimized queries. **Con:** Eventual consistency, more moving parts.
 
 They are often used together but are independent patterns.`,
       },

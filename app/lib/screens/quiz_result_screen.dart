@@ -30,11 +30,11 @@ class QuizResultScreen extends StatelessWidget {
     final t = Theme.of(context);
     final total = questions.length;
     final pct = total == 0 ? 0.0 : correct / total;
-    final (emoji, headline, sub) = switch (pct) {
-      >= 0.9 => ('🏆', 'Outstanding!', 'You are interview ready on this one.'),
-      >= 0.7 => ('🎉', 'Great job!', 'Solid work. Review the misses and you are set.'),
-      >= 0.5 => ('💪', 'Good effort!', 'Keep practicing, you are getting there.'),
-      _ => ('📚', 'Keep learning!', 'Review the explanations and try again.'),
+    final (icon, headline, sub) = switch (pct) {
+      >= 0.9 => (Icons.emoji_events_rounded, 'Outstanding!', 'You are interview ready on this one.'),
+      >= 0.7 => (Icons.celebration_rounded, 'Great job!', 'Solid work. Review the misses and you are set.'),
+      >= 0.5 => (Icons.trending_up_rounded, 'Good effort!', 'Keep practicing, you are getting there.'),
+      _ => (Icons.menu_book_rounded, 'Keep learning!', 'Review the explanations and try again.'),
     };
     final color = pct >= 0.7 ? AppColors.success : (pct >= 0.5 ? AppColors.warning : AppColors.danger);
     final mins = duration.inMinutes;
@@ -88,7 +88,7 @@ class QuizResultScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text(emoji, style: const TextStyle(fontSize: 40)).animate().scale(
+                IconBox(icon: icon, color: color, size: 64).animate().scale(
                       delay: 600.ms,
                       duration: 500.ms,
                       curve: Curves.elasticOut,
@@ -172,8 +172,9 @@ class _Sparkle extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!show) return const SizedBox.shrink();
     final angle = index * (2 * pi / 10);
-    const emojis = ['✨', '🎉', '⭐', '🎊'];
-    return Text(emojis[index % emojis.length], style: const TextStyle(fontSize: 22))
+    const icons = [Icons.auto_awesome_rounded, Icons.star_rounded, Icons.circle, Icons.star_border_rounded];
+    final colors = [AppColors.warning, AppColors.primary, AppColors.accent, AppColors.success];
+    return Icon(icons[index % icons.length], size: index.isEven ? 22 : 14, color: colors[index % colors.length])
         .animate(delay: 900.ms)
         .fadeIn(duration: 200.ms)
         .move(end: Offset(cos(angle) * 120, sin(angle) * 120), duration: 900.ms, curve: Curves.easeOutCubic)

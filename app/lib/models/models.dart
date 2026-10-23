@@ -1,13 +1,21 @@
 int _int(dynamic v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
 
+/// Designations. Kept in sync with ROLES in backend/src/config/constants.js;
+/// bundled in the app so onboarding never waits for the server.
 class RoleOption {
-  RoleOption({required this.id, required this.title, required this.icon});
+  const RoleOption({required this.id, required this.title, required this.icon});
   final String id;
   final String title;
   final String icon;
 
-  factory RoleOption.fromJson(Map<String, dynamic> j) =>
-      RoleOption(id: j['id'], title: j['title'], icon: j['icon'] ?? 'code');
+  static const all = [
+    RoleOption(id: 'frontend', title: 'Frontend Developer', icon: 'web'),
+    RoleOption(id: 'backend', title: 'Backend Developer', icon: 'dns'),
+    RoleOption(id: 'fullstack', title: 'Full Stack Developer', icon: 'layers'),
+    RoleOption(id: 'software-engineer', title: 'Software Engineer', icon: 'code'),
+    RoleOption(id: 'mobile', title: 'Mobile Developer', icon: 'smartphone'),
+    RoleOption(id: 'devops', title: 'DevOps / Cloud Engineer', icon: 'cloud'),
+  ];
 }
 
 class LevelOption {
@@ -25,12 +33,20 @@ class LevelOption {
   static String name(int level) => switch (level) { 1 => 'Junior', 2 => 'Mid', 3 => 'Senior', _ => 'All' };
 }
 
+/// Track categories. Kept in sync with CATEGORIES in backend/src/config/constants.js.
 class CategoryOption {
-  CategoryOption({required this.id, required this.title});
+  const CategoryOption({required this.id, required this.title});
   final String id;
   final String title;
 
-  factory CategoryOption.fromJson(Map<String, dynamic> j) => CategoryOption(id: j['id'], title: j['title']);
+  static const all = [
+    CategoryOption(id: 'system-design', title: 'System Design'),
+    CategoryOption(id: 'languages', title: 'Languages'),
+    CategoryOption(id: 'frameworks', title: 'Frameworks'),
+    CategoryOption(id: 'databases', title: 'Databases'),
+    CategoryOption(id: 'devops', title: 'DevOps & Cloud'),
+    CategoryOption(id: 'fundamentals', title: 'CS Fundamentals'),
+  ];
 }
 
 class Streak {
@@ -47,7 +63,6 @@ class AppUser {
     required this.id,
     required this.name,
     this.email,
-    required this.isGuest,
     this.role,
     required this.level,
     required this.streak,
@@ -56,16 +71,14 @@ class AppUser {
   final String id;
   final String name;
   final String? email;
-  final bool isGuest;
   final String? role;
   final int level;
   final Streak streak;
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
         id: j['_id'] ?? j['id'] ?? '',
-        name: j['name'] ?? 'Guest',
+        name: j['name'] ?? '',
         email: j['email'],
-        isGuest: j['isGuest'] == true,
         role: j['role'],
         level: _int(j['level']) == 0 ? 1 : _int(j['level']),
         streak: Streak.fromJson(j['streak']),

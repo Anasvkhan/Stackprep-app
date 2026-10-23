@@ -5,7 +5,6 @@ import '../core/theme.dart';
 import '../widgets/brand.dart';
 import '../widgets/common.dart';
 import 'auth_screen.dart';
-import 'role_select_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -82,7 +81,7 @@ class WelcomeScreen extends StatelessWidget {
                       label: 'Get started',
                       icon: Icons.arrow_forward_rounded,
                       onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RoleSelectScreen(standalone: true)),
+                        MaterialPageRoute(builder: (_) => const AuthScreen()),
                       ),
                     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.3, end: 0),
                     const SizedBox(height: 10),

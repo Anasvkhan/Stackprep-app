@@ -65,10 +65,10 @@ edit -> git add -> git commit -> git push
           q: 'Merge vs rebase: what is the difference and when do you use each?',
           e: `
 **Merge** – combines branches with a **merge commit**; preserves the exact history.
-- ✅ Non-destructive, safe for shared branches. ❌ History can get noisy.
+- **Pro:** Non-destructive, safe for shared branches. **Con:** History can get noisy.
 
 **Rebase** – replays your commits **on top of** another branch, rewriting their hashes; creates a **linear** history.
-- ✅ Clean, linear history; easier bisect/review. ❌ Rewrites history.
+- **Pro:** Clean, linear history; easier bisect/review. **Con:** Rewrites history.
 
 **Golden rule:** never rebase commits that others have already pulled (public/shared branches).
 
@@ -128,7 +128,7 @@ Reduce conflicts with small PRs, frequent syncing with main, and clear code owne
 - **git reset:** moves the branch pointer back (rewrites history – local only):
   - \`--soft\`: keep changes staged
   - \`--mixed\` (default): keep changes unstaged
-  - \`--hard\`: discard changes completely ⚠️
+  - \`--hard\`: discard changes completely (dangerous)
 - **git revert <hash>:** creates a **new commit** that undoes a previous commit – **safe for shared branches**.
 
 Lost something? \`git reflog\` shows where HEAD has been, so you can recover "deleted" commits.`,

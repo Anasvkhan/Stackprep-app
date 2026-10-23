@@ -92,10 +92,10 @@ Clients <-WebSocket-> Chat Gateway servers (stateful connections)
 **Core problem: generating the home timeline**
 
 **1. Fan-out on read (pull):** at read time, fetch recent tweets from everyone you follow and merge.
-- ✅ Cheap writes. ❌ Slow reads for users following thousands.
+- **Pro:** Cheap writes. **Con:** Slow reads for users following thousands.
 
 **2. Fan-out on write (push):** when a user tweets, insert the tweet id into each follower's **precomputed timeline cache** (Redis list).
-- ✅ Very fast reads. ❌ Celebrities with 100M followers -> massive write amplification.
+- **Pro:** Very fast reads. **Con:** Celebrities with 100M followers -> massive write amplification.
 
 **3. Hybrid (what Twitter does):** push for normal users; for **celebrities**, don't fan out – merge their tweets at read time.
 

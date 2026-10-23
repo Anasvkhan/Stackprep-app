@@ -17,10 +17,10 @@ module.exports = {
           t: 'qa', l: 1,
           q: 'Explain CSR, SSR, SSG and ISR.',
           e: `
-- **CSR (Client-Side Rendering):** browser downloads JS, then renders and fetches data. ✅ Rich interactivity. ❌ Slow first paint, weaker SEO.
-- **SSR (Server-Side Rendering):** HTML is rendered **per request** on the server. ✅ Fresh data + SEO. ❌ Server cost, slower TTFB than static.
-- **SSG (Static Site Generation):** HTML generated **at build time**, served from a CDN. ✅ Fastest, cheap. ❌ Data can be stale until rebuild.
-- **ISR (Incremental Static Regeneration):** static pages regenerated in the background after a revalidate interval or on-demand. ✅ Static speed + reasonably fresh data.
+- **CSR (Client-Side Rendering):** browser downloads JS, then renders and fetches data. **Pro:** Rich interactivity. **Con:** Slow first paint, weaker SEO.
+- **SSR (Server-Side Rendering):** HTML is rendered **per request** on the server. **Pro:** Fresh data + SEO. **Con:** Server cost, slower TTFB than static.
+- **SSG (Static Site Generation):** HTML generated **at build time**, served from a CDN. **Pro:** Fastest, cheap. **Con:** Data can be stale until rebuild.
+- **ISR (Incremental Static Regeneration):** static pages regenerated in the background after a revalidate interval or on-demand. **Pro:** Static speed + reasonably fresh data.
 
 Next.js lets you choose per route (and with the App Router, per fetch / segment). **Streaming SSR** with Suspense sends HTML progressively.`,
         },

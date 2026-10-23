@@ -6,14 +6,12 @@ import '../core/api_client.dart';
 import '../state/app_state.dart';
 import '../widgets/common.dart';
 
-/// The only onboarding question: what is your designation?
+/// Asked once right after sign up: what is your designation?
 ///
-/// - [standalone]: pushed from the welcome screen; creates a guest account on continue.
 /// - [changing]: pushed from the profile screen to change the designation.
-/// - neither: shown by the root gate for a signed-in user without a designation.
+/// - otherwise: shown by the root gate for a signed-in user without a designation.
 class RoleSelectScreen extends StatefulWidget {
-  const RoleSelectScreen({super.key, this.standalone = false, this.changing = false});
-  final bool standalone;
+  const RoleSelectScreen({super.key, this.changing = false});
   final bool changing;
 
   @override
@@ -44,13 +42,8 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
     final nav = Navigator.of(context);
     setState(() => _loading = true);
     try {
-      if (widget.standalone) {
-        await state.startAsGuest(_selected!);
-        nav.popUntil((r) => r.isFirst);
-      } else {
-        await state.updateProfile(role: _selected);
-        if (widget.changing) nav.pop();
-      }
+      await state.updateProfile(role: _selected);
+      if (widget.changing) nav.pop();
     } on ApiException catch (e) {
       if (mounted) showSnack(context, e.message, error: true);
     } finally {
@@ -61,11 +54,24 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final roles = context.watch<AppState>().roles;
-    final hasBack = widget.standalone || widget.changing;
+    final state = context.watch<AppState>();
+    final roles = state.roles;
+    final firstName = (state.user?.name ?? '').trim().split(RegExp(r'\s+')).first;
 
     return Scaffold(
-      appBar: hasBack ? AppBar() : null,
+      appBar: widget.changing
+          ? AppBar()
+          : AppBar(
+              automaticallyImplyLeading: false,
+              actions: [
+                TextButton.icon(
+                  onPressed: state.logout,
+                  icon: const Icon(Icons.logout_rounded, size: 18),
+                  label: const Text('Log out'),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
       body: SafeArea(
         child: MaxWidth(
           maxWidth: 720,
@@ -75,7 +81,10 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   children: [
-                    if (!hasBack) const SizedBox(height: 24),
+                    if (!widget.changing && firstName.isNotEmpty) ...[
+                      Text('Welcome, $firstName', style: t.textTheme.titleMedium?.copyWith(color: t.hintColor)),
+                      const SizedBox(height: 4),
+                    ],
                     Text(widget.changing ? 'Change designation' : 'What\'s your designation?',
                             style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800))
                         .animate()
