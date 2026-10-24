@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api_client.dart';
 import '../core/theme.dart';
+import '../core/validators.dart';
 import '../state/app_state.dart';
 import '../widgets/brand.dart';
 import '../widgets/common.dart';
+import 'forgot_password_screen.dart';
 
 /// Sign up / login. Every user has an account; progress is saved to it.
 class AuthScreen extends StatefulWidget {
@@ -19,7 +22,10 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   late bool _login = widget.startWithLogin;
-  final _form = GlobalKey<FormState>();
+  // Replaced when switching modes so errors from the other mode don't linger.
+  GlobalKey<FormState> _form = GlobalKey<FormState>();
+  // Errors show after the first submit, then update while the user types.
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -34,18 +40,43 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  void _setMode(bool login) {
+    if (login == _login) return;
+    setState(() {
+      _login = login;
+      _form = GlobalKey<FormState>();
+      _autovalidate = AutovalidateMode.disabled;
+    });
+  }
+
   Future<void> _submit() async {
-    if (!_form.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    if (!_form.currentState!.validate()) {
+      setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
+      return;
+    }
     final state = context.read<AppState>();
     final nav = Navigator.of(context);
     setState(() => _loading = true);
     try {
       if (_login) {
-        await state.login(_email.text.trim(), _password.text);
+        await state.login(_email.text.trim().toLowerCase(), _password.text);
+        nav.popUntil((r) => r.isFirst);
       } else {
-        await state.register(_name.text.trim(), _email.text.trim(), _password.text);
+        await state.register(
+          _name.text.trim().replaceAll(RegExp(r'\s+'), ' '),
+          _email.text.trim().toLowerCase(),
+          _password.text,
+        );
+        // Account created: switch to an empty Login form; the user signs in themselves.
+        if (!mounted) return;
+        _name.clear();
+        _email.clear();
+        _password.clear();
+        _obscure = true;
+        _setMode(true);
+        showSnack(context, 'Account created. Please login to continue.');
       }
-      nav.popUntil((r) => r.isFirst);
     } on ApiException catch (e) {
       if (mounted) showSnack(context, e.message, error: true);
     } finally {
@@ -64,6 +95,7 @@ class _AuthScreenState extends State<AuthScreen> {
           maxWidth: 460,
           child: Form(
             key: _form,
+            autovalidateMode: _autovalidate,
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               children: [
@@ -73,7 +105,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     PillSegment(true, 'Login', icon: Icons.login_rounded),
                   ],
                   selected: _login,
-                  onChanged: (v) => setState(() => _login = v),
+                  onChanged: _setMode,
                 ),
                 const SizedBox(height: 16),
                 AppCard(
@@ -107,46 +139,57 @@ class _AuthScreenState extends State<AuthScreen> {
                             ? const SizedBox(width: double.infinity)
                             : Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
-                                child: _Field(
+                                child: LabeledField(
                                   label: 'Full name',
                                   child: TextFormField(
                                     controller: _name,
                                     textInputAction: TextInputAction.next,
                                     textCapitalization: TextCapitalization.words,
+                                    autofillHints: const [AutofillHints.name],
+                                    inputFormatters: [LengthLimitingTextInputFormatter(50)],
                                     decoration: const InputDecoration(
                                       hintText: 'Your name',
                                       prefixIcon: Icon(Icons.person_outline_rounded),
                                     ),
-                                    validator: (v) => (v == null || v.trim().isEmpty) ? 'Please enter your name' : null,
+                                    validator: Validators.name,
                                   ),
                                 ),
                               ),
                       ),
-                      _Field(
+                      LabeledField(
                         label: 'Email',
                         child: TextFormField(
                           controller: _email,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           autofillHints: const [AutofillHints.email],
+                          autocorrect: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                            LengthLimitingTextInputFormatter(100),
+                          ],
                           decoration: const InputDecoration(
                             hintText: 'you@example.com',
                             prefixIcon: Icon(Icons.mail_outline_rounded),
                           ),
-                          validator: (v) {
-                            final s = v?.trim() ?? '';
-                            return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(s) ? null : 'Enter a valid email';
-                          },
+                          validator: Validators.email,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _Field(
+                      LabeledField(
                         label: 'Password',
-                        hint: 'Min. 6 chars',
+                        hint: _login ? null : '6+ chars · letter + number',
                         child: TextFormField(
                           controller: _password,
                           obscureText: _obscure,
                           textInputAction: TextInputAction.done,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          autofillHints: [_login ? AutofillHints.password : AutofillHints.newPassword],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                            LengthLimitingTextInputFormatter(64),
+                          ],
                           onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             hintText: '••••••••',
@@ -156,10 +199,22 @@ class _AuthScreenState extends State<AuthScreen> {
                               onPressed: () => setState(() => _obscure = !_obscure),
                             ),
                           ),
-                          validator: (v) => (v == null || v.length < 6) ? 'At least 6 characters' : null,
+                          validator: _login ? Validators.loginPassword : Validators.newPassword,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      if (_login)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                            ),
+                            child: const Text('Forgot password?'),
+                          ),
+                        )
+                      else
+                        const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       GradientButton(
                         label: _login ? 'Login' : 'Create account',
                         icon: _login ? Icons.arrow_forward_rounded : null,
@@ -168,7 +223,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () => setState(() => _login = !_login),
+                        onPressed: () => _setMode(!_login),
                         child: Text(_login ? 'New here? Create an account' : 'Already have an account? Login'),
                       ),
                     ],
@@ -184,8 +239,8 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 /// Label above a form field, with an optional monospace hint on the right.
-class _Field extends StatelessWidget {
-  const _Field({required this.label, required this.child, this.hint});
+class LabeledField extends StatelessWidget {
+  const LabeledField({super.key, required this.label, required this.child, this.hint});
   final String label;
   final String? hint;
   final Widget child;

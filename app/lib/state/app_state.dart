@@ -87,10 +87,10 @@ class AppState extends ChangeNotifier {
     bumpData();
   }
 
-  /// Creates the account. The user picks a designation right after.
+  /// Creates the account without signing in: the user logs in next, and only
+  /// then picks a designation.
   Future<void> register(String name, String email, String password) async {
-    final res = await _api.post('/auth/register', {'name': name, 'email': email, 'password': password});
-    await _saveSession(res);
+    await _api.post('/auth/register', {'name': name, 'email': email, 'password': password});
   }
 
   Future<void> updateProfile({String? role, int? level, String? name}) async {

@@ -18,3 +18,9 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 30d
+      - key: BREVO_API_KEY
+        sync: false # Brevo API key, entered in the Render dashboard
+      - key: MAIL_FROM_EMAIL
+        sync: false # sender email verified in Brevo
+      - key: MAIL_FROM_NAME
+        value: StackPrep

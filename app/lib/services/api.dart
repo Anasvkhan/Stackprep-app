@@ -80,4 +80,15 @@ class Api {
   static Future<ProgressData> progress() async => ProgressData.fromJson(await _c.get('/progress'));
 
   static Future<void> resetProgress() => _c.delete('/users/me/progress');
+
+  /// Emails a 6-digit reset code. The server answers the same way whether or not the email exists.
+  static Future<String> forgotPassword(String email) async {
+    final res = await _c.post('/auth/forgot-password', {'email': email});
+    return res['message']?.toString() ?? 'Code sent.';
+  }
+
+  static Future<String> resetPassword({required String email, required String code, required String password}) async {
+    final res = await _c.post('/auth/reset-password', {'email': email, 'code': code, 'password': password});
+    return res['message']?.toString() ?? 'Password updated.';
+  }
 }
