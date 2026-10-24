@@ -34,7 +34,12 @@ class _ShellState extends State<Shell> {
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 900;
-    final body = IndexedStack(index: _index, children: _pages);
+    // Only the visible tab takes part in Hero animations: Home and Explore both
+    // show the same track cards, and duplicate Hero tags break route transitions.
+    final body = IndexedStack(
+      index: _index,
+      children: [for (var i = 0; i < _pages.length; i++) HeroMode(enabled: i == _index, child: _pages[i])],
+    );
 
     if (wide) {
       return Scaffold(
@@ -59,13 +64,19 @@ class _ShellState extends State<Shell> {
 
     return Scaffold(
       body: body,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _select,
-        destinations: [
-          for (final d in _destinations)
-            NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3),
-        ],
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+          boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.03), blurRadius: 16, offset: const Offset(0, -4))],
+        ),
+        child: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: _select,
+          destinations: [
+            for (final d in _destinations)
+              NavigationDestination(icon: Icon(d.$1), selectedIcon: Icon(d.$2), label: d.$3),
+          ],
+        ),
       ),
     );
   }

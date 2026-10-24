@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../core/api_client.dart';
+import '../core/theme.dart';
 import '../state/app_state.dart';
+import '../widgets/brand.dart';
 import '../widgets/common.dart';
 
 /// Asked once right after sign up: what is your designation?
@@ -51,6 +53,7 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
@@ -63,6 +66,8 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
           ? AppBar()
           : AppBar(
               automaticallyImplyLeading: false,
+              titleSpacing: 20,
+              title: const BrandTitle(size: 30),
               actions: [
                 TextButton.icon(
                   onPressed: state.logout,
@@ -79,23 +84,26 @@ class _RoleSelectScreenState extends State<RoleSelectScreen> {
             children: [
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                   children: [
                     if (!widget.changing && firstName.isNotEmpty) ...[
-                      Text('Welcome, $firstName', style: t.textTheme.titleMedium?.copyWith(color: t.hintColor)),
-                      const SizedBox(height: 4),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: CountPill('Welcome, $firstName', icon: Icons.circle),
+                      ),
+                      const SizedBox(height: 12),
                     ],
                     Text(widget.changing ? 'Change designation' : 'What\'s your designation?',
-                            style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800))
+                            style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3))
                         .animate()
                         .fadeIn()
                         .slideX(begin: -0.05),
                     const SizedBox(height: 8),
                     Text(
                       'We\'ll show the tracks and questions that matter for your role. You can change this anytime.',
-                      style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor, height: 1.5),
+                      style: t.textTheme.bodyMedium?.copyWith(color: AppColors.muted(context), height: 1.5),
                     ).animate().fadeIn(delay: 100.ms),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 22),
                     LayoutBuilder(builder: (context, c) {
                       final cols = c.maxWidth > 560 ? 2 : 1;
                       return Wrap(
@@ -162,9 +170,12 @@ class _RoleCard extends StatelessWidget {
         curve: Curves.easeOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? primary.withValues(alpha: 0.08) : t.cardColor,
-          borderRadius: BorderRadius.circular(18),
+          color: selected ? primary.withValues(alpha: 0.07) : t.cardColor,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: selected ? primary : t.dividerColor, width: selected ? 2 : 1),
+          boxShadow: AppColors.isDark(context)
+              ? null
+              : [BoxShadow(color: AppColors.primary.withValues(alpha: selected ? 0.12 : 0.04), blurRadius: 10, offset: const Offset(0, 3))],
         ),
         child: Row(
           children: [
@@ -173,7 +184,7 @@ class _RoleCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: selected ? primary : primary.withValues(alpha: 0.12),
+                color: selected ? AppColors.primary : primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: selected ? Colors.white : primary),
@@ -183,18 +194,31 @@ class _RoleCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                  Text(title, style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 3),
-                  Text(description, style: t.textTheme.bodySmall?.copyWith(color: t.hintColor)),
+                  Text(description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: t.textTheme.bodySmall?.copyWith(color: AppColors.muted(context), height: 1.4)),
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
               child: selected
-                  ? Icon(Icons.check_circle_rounded, key: const ValueKey(1), color: primary)
-                  : Icon(Icons.circle_outlined, key: const ValueKey(0), color: t.dividerColor),
+                  ? Icon(Icons.check_circle_rounded, key: const ValueKey(1), color: primary, size: 24)
+                  : Container(
+                      key: const ValueKey(0),
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: primary.withValues(alpha: 0.10),
+                        border: Border.all(color: primary.withValues(alpha: 0.25), width: 1.5),
+                      ),
+                    ),
             ),
           ],
         ),

@@ -14,20 +14,20 @@ class QuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final (statusIcon, statusColor) = switch (question.status) {
-      'correct' => (Icons.check_circle_rounded, AppColors.success),
-      'wrong' => (Icons.cancel_rounded, AppColors.danger),
-      _ => (Icons.radio_button_unchecked_rounded, t.dividerColor),
+      'correct' => (Icons.check_rounded, AppColors.success),
+      'wrong' => (Icons.close_rounded, AppColors.danger),
+      _ => (null, t.colorScheme.primary),
     };
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 30,
             child: Text('$number.',
-                style: t.textTheme.titleSmall?.copyWith(color: t.hintColor, fontWeight: FontWeight.w700)),
+                style: t.textTheme.titleSmall?.copyWith(color: t.colorScheme.primary, fontWeight: FontWeight.w800, height: 1.5)),
           ),
           Expanded(
             child: Column(
@@ -47,14 +47,23 @@ class QuestionCard extends StatelessWidget {
                     TypeBadge(question.type),
                     LevelBadge(question.level),
                     if (question.bookmarked)
-                      Tag(label: 'Saved', color: t.colorScheme.primary, icon: Icons.bookmark_rounded),
+                      Tag(label: 'Saved', color: AppColors.primaryText(context), icon: Icons.bookmark_rounded),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Icon(statusIcon, color: statusColor, size: 22),
+          const SizedBox(width: 10),
+          Container(
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusIcon == null ? statusColor.withValues(alpha: 0.08) : statusColor.withValues(alpha: 0.14),
+              border: statusIcon == null ? Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.5) : null,
+            ),
+            child: statusIcon == null ? null : Icon(statusIcon, color: statusColor, size: 16),
+          ),
         ],
       ),
     );

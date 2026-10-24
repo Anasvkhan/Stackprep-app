@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api_client.dart';
+import '../core/theme.dart';
 import '../models/models.dart';
 import '../services/api.dart';
 import '../widgets/common.dart';
@@ -93,7 +94,6 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: Column(
@@ -108,7 +108,8 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
                     scrollDirection: Axis.horizontal,
                     child: Row(children: [
                       _filterChip('All levels', _level == null, () => _setLevel(null)),
-                      for (final l in LevelOption.all) _filterChip(l.title, _level == l.id, () => _setLevel(l.id)),
+                      for (final l in LevelOption.all)
+                        _filterChip(l.title, _level == l.id, () => _setLevel(l.id), dot: AppColors.levelColors[l.id]),
                     ]),
                   ),
                   const SizedBox(height: 6),
@@ -122,7 +123,8 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
                     ]),
                   ),
                   const SizedBox(height: 8),
-                  Text('$_total questions', style: t.textTheme.bodySmall?.copyWith(color: t.hintColor)),
+                  Text('$_total questions',
+                      style: AppTheme.mono(context, size: 12, weight: FontWeight.w600, color: AppColors.muted(context))),
                 ],
               ),
             ),
@@ -137,10 +139,17 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
     if (_items.isEmpty && _loading) return const SkeletonList(height: 96);
     if (_items.isEmpty && _error != null) return ErrorView(message: _error!, onRetry: _reload);
     if (_items.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.filter_alt_off_rounded,
         title: 'No questions match these filters',
         message: 'Try another level or question type.',
+        action: _level != null || _type != 'all' ? 'Reset filters' : null,
+        actionIcon: Icons.restart_alt_rounded,
+        onAction: () {
+          _level = null;
+          _type = 'all';
+          _reload();
+        },
       );
     }
     return RefreshIndicator(
@@ -177,8 +186,24 @@ class _QuestionsScreenState extends State<QuestionsScreen> {
     _reload();
   }
 
-  Widget _filterChip(String label, bool selected, VoidCallback onTap) => Padding(
+  Widget _filterChip(String label, bool selected, VoidCallback onTap, {Color? dot}) => Padding(
         padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onTap()),
+        child: ChoiceChip(
+          avatar: dot == null
+              ? null
+              : Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: selected ? Colors.white : dot,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+          label: Text(label),
+          selected: selected,
+          onSelected: (_) => onTap(),
+        ),
       );
 }

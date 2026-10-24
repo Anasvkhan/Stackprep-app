@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../models/models.dart';
 import '../services/api.dart';
 import '../state/app_state.dart';
+import '../core/theme.dart';
 import '../widgets/async_view.dart';
+import '../widgets/brand.dart';
 import '../widgets/common.dart';
 import '../widgets/track_card.dart';
 import 'search_screen.dart';
@@ -27,7 +29,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final categories = state.categories;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Explore')),
+      appBar: const BrandAppBar(subtitle: 'Explore'),
       body: SafeArea(
         top: false,
         child: AsyncView<List<TrackSummary>>(
@@ -59,29 +61,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
                             decoration: BoxDecoration(
-                              color: t.cardColor,
-                              borderRadius: BorderRadius.circular(14),
+                              color: AppColors.primary.withValues(alpha: AppColors.isDark(context) ? 0.12 : 0.05),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: t.dividerColor),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.search_rounded, color: t.hintColor),
+                                Icon(Icons.search_rounded, color: AppColors.muted(context)),
                                 const SizedBox(width: 10),
-                                Text('Search any question, e.g. "kafka"', style: TextStyle(color: t.hintColor)),
+                                Expanded(
+                                  child: Text('Search any question, e.g. "kafka"',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: AppColors.muted(context))),
+                                ),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SegmentedButton<bool>(
-                          showSelectedIcon: false,
-                          segments: [
-                            const ButtonSegment(value: false, label: Text('My stack')),
-                            const ButtonSegment(value: true, label: Text('All tracks')),
+                        PillSegmented<bool>(
+                          segments: const [
+                            PillSegment(false, 'My stack'),
+                            PillSegment(true, 'All tracks'),
                           ],
-                          selected: {_allTracks},
-                          onSelectionChanged: (s) => setState(() {
-                            _allTracks = s.first;
+                          selected: _allTracks,
+                          onChanged: (v) => setState(() {
+                            _allTracks = v;
                             _category = 'all';
                           }),
                         ),
@@ -100,7 +106,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           const EmptyState(icon: Icons.search_off_rounded, title: 'No tracks in this category')
                         else
                           for (final entry in groups.entries) ...[
-                            SectionHeader('${entry.key.title}  ·  ${entry.value.length}'),
+                            SectionHeader('${entry.key.title} · ${entry.value.length}'),
                             ResponsiveGrid(children: [
                               for (final tr in entry.value) TrackCard(track: tr, onReturn: refresh).entrance(index++),
                             ]),
@@ -121,7 +127,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget _chip(String label, String id) => Padding(
         padding: const EdgeInsets.only(right: 8),
         child: ChoiceChip(
-          label: Text(label),
+          label: Text(id == 'all' ? label.toUpperCase() : label),
           selected: _category == id,
           onSelected: (_) => setState(() => _category = id),
         ),

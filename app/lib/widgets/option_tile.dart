@@ -18,13 +18,14 @@ class OptionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final letter = String.fromCharCode(65 + index);
-    final (border, bg, badgeBg, badgeFg, icon) = switch (state) {
+    final (border, bg, badgeBg, badgeFg, icon, caption) = switch (state) {
       OptionState.correct => (
           AppColors.success,
           AppColors.success.withValues(alpha: 0.10),
           AppColors.success,
           Colors.white,
           Icons.check_rounded,
+          'Correct answer',
         ),
       OptionState.wrong => (
           AppColors.danger,
@@ -32,12 +33,14 @@ class OptionTile extends StatelessWidget {
           AppColors.danger,
           Colors.white,
           Icons.close_rounded,
+          'Your pick',
         ),
       _ => (
           t.dividerColor,
           t.cardColor,
-          t.colorScheme.primary.withValues(alpha: 0.10),
-          t.colorScheme.primary,
+          AppColors.surface2(context),
+          AppColors.primaryText(context),
+          null,
           null,
         ),
     };
@@ -55,23 +58,34 @@ class OptionTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: border, width: state == OptionState.idle || state == OptionState.dimmed ? 1 : 2),
+            border: Border.all(color: border, width: state == OptionState.idle || state == OptionState.dimmed ? 1 : 1.8),
           ),
           child: Row(
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: badgeBg, shape: BoxShape.circle),
                 child: icon != null
-                    ? Icon(icon, color: badgeFg, size: 18).animate().scale(curve: Curves.easeOutBack, duration: 300.ms)
-                    : Text(letter, style: TextStyle(color: badgeFg, fontWeight: FontWeight.w800)),
+                    ? Icon(icon, color: badgeFg, size: 17).animate().scale(curve: Curves.easeOutBack, duration: 300.ms)
+                    : Text(letter, style: AppTheme.mono(context, size: 13, weight: FontWeight.w700, color: badgeFg)),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(text, style: t.textTheme.bodyLarge?.copyWith(height: 1.4, fontWeight: FontWeight.w500)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (caption != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(caption.toUpperCase(),
+                            style: AppTheme.mono(context, size: 10.5, weight: FontWeight.w700, color: border, letterSpacing: 0.5)),
+                      ),
+                    Text(text, style: t.textTheme.bodyLarge?.copyWith(height: 1.4, fontWeight: FontWeight.w500)),
+                  ],
+                ),
               ),
             ],
           ),

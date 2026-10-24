@@ -66,54 +66,118 @@ class _QuizSetupSheetState extends State<_QuizSetupSheet> {
   int _count = 10;
   late String _mode = widget.initial.mode;
 
+  static const _minutes = {5: 3, 10: 5, 15: 8, 20: 12};
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     Widget label(String s) => Padding(
-          padding: const EdgeInsets.only(top: 18, bottom: 10),
-          child: Text(s, style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+          padding: const EdgeInsets.only(top: 20, bottom: 10),
+          child: Text(s, style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
         );
-    Widget chip(String text, bool selected, VoidCallback onTap) =>
-        ChoiceChip(label: Text(text), selected: selected, onSelected: (_) => setState(onTap));
+    Widget chip(String text, bool selected, VoidCallback onTap, {Color? dot, IconData? icon}) => ChoiceChip(
+          avatar: dot != null
+              ? Center(
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(color: selected ? Colors.white : dot, shape: BoxShape.circle),
+                  ),
+                )
+              : icon != null
+                  ? Icon(icon, size: 16, color: selected ? Colors.white : AppColors.muted(context))
+                  : null,
+          label: Text(text),
+          selected: selected,
+          onSelected: (_) => setState(onTap),
+        );
 
     return SafeArea(
-      child: MaxWidth(
-        maxWidth: 560,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: SingleChildScrollView(
+        child: MaxWidth(
+          maxWidth: 560,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.initial.title, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                Text('Set up your practice session',
+                    style: t.textTheme.bodyMedium?.copyWith(color: AppColors.muted(context))),
+                label('Difficulty level'),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  chip('All levels', _level == null, () => _level = null, icon: Icons.layers_outlined),
+                  for (final l in LevelOption.all)
+                    chip(l.title, _level == l.id, () => _level = l.id, dot: AppColors.levelColors[l.id]),
+                ]),
+                label('Number of questions'),
+                Row(children: [
+                  for (final n in [5, 10, 15, 20]) ...[
+                    if (n != 5) const SizedBox(width: 8),
+                    Expanded(child: _countTile(context, n)),
+                  ],
+                ]),
+                label('Questions'),
+                Wrap(spacing: 8, runSpacing: 8, children: [
+                  chip('Mixed', _mode == 'mixed', () => _mode = 'mixed', icon: Icons.shuffle_rounded),
+                  chip('Unseen only', _mode == 'new', () => _mode = 'new', icon: Icons.visibility_off_outlined),
+                  chip('My mistakes', _mode == 'mistakes', () => _mode = 'mistakes', icon: Icons.replay_rounded),
+                ]),
+                const SizedBox(height: 28),
+                GradientButton(
+                  label: 'Start quiz',
+                  icon: Icons.play_arrow_rounded,
+                  onPressed: () => Navigator.of(context).pop(QuizConfig(
+                    track: widget.initial.track,
+                    topic: widget.initial.topic,
+                    level: _level,
+                    count: _count,
+                    mode: _mode,
+                    title: widget.initial.title,
+                  )),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _countTile(BuildContext context, int n) {
+    final selected = _count == n;
+    final t = Theme.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Pressable(
+        onTap: () => setState(() => _count = n),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.surface2(context),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: selected
+                ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                : null,
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.initial.title, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-              Text('Set up your practice session', style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor)),
-              label('Difficulty level'),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                chip('All levels', _level == null, () => _level = null),
-                for (final l in LevelOption.all) chip(l.title, _level == l.id, () => _level = l.id),
-              ]),
-              label('Number of questions'),
-              Wrap(spacing: 8, children: [
-                for (final n in [5, 10, 15, 20]) chip('$n', _count == n, () => _count = n),
-              ]),
-              label('Questions'),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                chip('Mixed', _mode == 'mixed', () => _mode = 'mixed'),
-                chip('Unseen only', _mode == 'new', () => _mode = 'new'),
-                chip('My mistakes', _mode == 'mistakes', () => _mode = 'mistakes'),
-              ]),
-              const SizedBox(height: 24),
-              GradientButton(
-                label: 'Start quiz',
-                icon: Icons.play_arrow_rounded,
-                onPressed: () => Navigator.of(context).pop(QuizConfig(
-                  track: widget.initial.track,
-                  topic: widget.initial.topic,
-                  level: _level,
-                  count: _count,
-                  mode: _mode,
-                  title: widget.initial.title,
-                )),
+              Text('$n',
+                  style: t.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: selected ? Colors.white : null,
+                  )),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('~${_minutes[n]} min',
+                    style: AppTheme.mono(
+                      context,
+                      size: 10.5,
+                      color: selected ? Colors.white.withValues(alpha: 0.85) : AppColors.muted(context),
+                    )),
               ),
             ],
           ),
@@ -249,16 +313,28 @@ class _QuizScreenState extends State<QuizScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.config.title),
+          leading: IconButton(
+            tooltip: 'Close',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          title: Text(widget.config.title, maxLines: 1, overflow: TextOverflow.ellipsis),
           actions: [
             if (_questions != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Row(
                   children: [
-                    const Icon(Icons.timer_outlined, size: 18),
-                    const SizedBox(width: 4),
-                    Text(_elapsed, style: const TextStyle(fontWeight: FontWeight.w700, fontFeatures: [])),
+                    Icon(Icons.timer_outlined, size: 16, color: AppColors.primaryText(context)),
+                    const SizedBox(width: 5),
+                    Text(_elapsed,
+                        style: AppTheme.mono(context,
+                            size: 13, weight: FontWeight.w700, color: AppColors.primaryText(context), height: 1.2)),
                   ],
                 ),
               ),
@@ -300,11 +376,19 @@ class _QuizScreenState extends State<QuizScreen> {
           maxWidth: 820,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-            child: Row(
+            child: Column(
               children: [
-                Text('${_index + 1}/${qs.length}', style: const TextStyle(fontWeight: FontWeight.w800)),
-                const SizedBox(width: 12),
-                Expanded(child: ProgressBar(value: (_index + (answered ? 1 : 0)) / qs.length, height: 8)),
+                Row(
+                  children: [
+                    Expanded(child: MonoCaption('Question ${_index + 1} of ${qs.length}')),
+                    MonoCaption(
+                      '${((_index + (answered ? 1 : 0)) * 100 / qs.length).round()}% complete',
+                      color: AppColors.primaryText(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ProgressBar(value: (_index + (answered ? 1 : 0)) / qs.length, height: 6),
               ],
             ),
           ),
@@ -333,7 +417,8 @@ class _QuizScreenState extends State<QuizScreen> {
                   children: [
                     LevelBadge(q.level),
                     const SizedBox(height: 12),
-                    Text(q.question, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, height: 1.4)),
+                    Text(q.question,
+                        style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, height: 1.4, letterSpacing: -0.2)),
                     if (q.code != null && q.code!.isNotEmpty) ...[const SizedBox(height: 14), CodeBlock(q.code!)],
                     const SizedBox(height: 22),
                     for (var i = 0; i < q.options.length; i++)
@@ -359,7 +444,24 @@ class _QuizScreenState extends State<QuizScreen> {
                         child: _showExplanation
                             ? Padding(
                                 padding: const EdgeInsets.only(top: 12),
-                                child: AppCard(child: MarkdownView(q.answer)),
+                                child: AppCard(
+                                  radius: 20,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.lightbulb_rounded, size: 18, color: t.colorScheme.primary),
+                                          const SizedBox(width: 8),
+                                          Text('Explanation',
+                                              style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      MarkdownView(q.answer),
+                                    ],
+                                  ),
+                                ),
                               )
                             : const SizedBox(width: double.infinity),
                       ),

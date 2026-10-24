@@ -189,9 +189,10 @@ class _QuestionPageState extends State<QuestionPage> with AutomaticKeepAliveClie
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(spacing: 6, children: [TypeBadge(q.type), LevelBadge(q.level)]),
+            Wrap(spacing: 6, runSpacing: 6, children: [TypeBadge(q.type), LevelBadge(q.level)]),
             const SizedBox(height: 14),
-            Text(q.question, style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700, height: 1.4))
+            Text(q.question,
+                    style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, height: 1.4, letterSpacing: -0.2))
                 .animate()
                 .fadeIn(duration: 300.ms),
             if (q.code != null && q.code!.isNotEmpty) ...[
@@ -200,6 +201,11 @@ class _QuestionPageState extends State<QuestionPage> with AutomaticKeepAliveClie
             ],
             const SizedBox(height: 22),
             if (q.isMcq) ..._buildMcq(t) else ..._buildTheory(t),
+            const SizedBox(height: 24),
+            Center(
+              child: Text('‹  Swipe left / right for questions  ›',
+                  style: AppTheme.mono(context, size: 11, color: AppColors.muted(context))),
+            ),
           ],
         ),
       ),
@@ -256,25 +262,40 @@ class _QuestionPageState extends State<QuestionPage> with AutomaticKeepAliveClie
                   children: [
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: t.colorScheme.primary.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: t.colorScheme.primary.withValues(alpha: 0.2)),
                       ),
-                      child: Column(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.psychology_alt_rounded, size: 40, color: t.colorScheme.primary)
-                              .animate(onPlay: (c) => c.repeat(reverse: true))
-                              .moveY(begin: -2, end: 2, duration: 1200.ms),
-                          const SizedBox(height: 10),
-                          Text('Think it through first',
-                              style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Say your answer out loud like in a real interview, then reveal the answer to compare.',
-                            textAlign: TextAlign.center,
-                            style: t.textTheme.bodySmall?.copyWith(color: t.hintColor, height: 1.5),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: t.colorScheme.primary.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.psychology_alt_rounded, size: 24, color: t.colorScheme.primary)
+                                .animate(onPlay: (c) => c.repeat(reverse: true))
+                                .moveY(begin: -1.5, end: 1.5, duration: 1200.ms),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Think it through first',
+                                    style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Say your answer out loud like in a real interview, then reveal the answer to compare.',
+                                  style: t.textTheme.bodySmall?.copyWith(color: AppColors.muted(context), height: 1.5),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -326,18 +347,24 @@ class _AnswerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     return AppCard(
+      radius: 20,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb_rounded, color: AppColors.warning, size: 20),
-              const SizedBox(width: 8),
-              Text(title, style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(color: AppColors.warning.withValues(alpha: 0.14), shape: BoxShape.circle),
+                child: const Icon(Icons.lightbulb_rounded, color: AppColors.warning, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(title, style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             ],
           ),
-          const Divider(height: 24),
+          const Divider(height: 26),
           MarkdownView(markdown),
         ],
       ),
@@ -352,7 +379,6 @@ class _SelfAssessment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
     Widget button(bool value, String label, IconData icon, Color color) {
       final selected = knew == value;
       return Expanded(
@@ -382,7 +408,7 @@ class _SelfAssessment extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('How did you do?', style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+        const MonoCaption('How did you do?'),
         const SizedBox(height: 10),
         Row(
           children: [

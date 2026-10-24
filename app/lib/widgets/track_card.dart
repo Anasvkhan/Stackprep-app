@@ -24,7 +24,7 @@ class TrackCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Hero(tag: 'track-icon-${track.slug}', child: IconBox(icon: iconFor(track.icon), color: color)),
+              Hero(tag: 'track-icon-${track.slug}', child: IconBox(icon: iconFor(track.icon), color: color, size: 48)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -33,27 +33,25 @@ class TrackCard extends StatelessWidget {
                     Text(track.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+                        style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text(
                       '${track.questionCount} questions · ${track.topicCount} topics',
-                      style: t.textTheme.bodySmall?.copyWith(color: t.hintColor),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: t.textTheme.bodySmall?.copyWith(color: AppColors.muted(context)),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: t.hintColor),
+              const SizedBox(width: 8),
+              Text('${(track.progress * 100).round()}%',
+                  style: AppTheme.mono(context, size: 14, weight: FontWeight.w700, color: color)),
+              Icon(Icons.chevron_right_rounded, color: AppColors.muted(context)),
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: ProgressBar(value: track.progress, color: color)),
-              const SizedBox(width: 10),
-              Text('${(track.progress * 100).round()}%',
-                  style: t.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: t.hintColor)),
-            ],
-          ),
+          ProgressBar(value: track.progress, color: color, height: 6),
         ],
       ),
     );
