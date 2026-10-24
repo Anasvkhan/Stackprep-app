@@ -46,28 +46,17 @@ class AppState extends ChangeNotifier {
       themeMode = ThemeMode.values[_prefs!.getInt(_themeKey) ?? ThemeMode.system.index];
 
       final token = _prefs!.getString(_tokenKey);
-      if (token == null) {
-        status = AuthStatus.signedOut;
-        notifyListeners();
-        return;
-      }
-      _api.token = token;
-
       final cached = _prefs!.getString(_userKey);
-      if (cached != null) {
-        // Show the app immediately with the saved profile, then sync with the server.
-        _applyUser(jsonDecode(cached) as Map<String, dynamic>);
-        refreshUser();
-        return;
+      if (token == null || cached == null) {
+        // No saved session, or a token without a saved profile (older install):
+        // ask the user to log in rather than wait for the server on the splash screen.
+        return _signOutLocal();
       }
 
-      // Signed in but nothing cached (older install): fetch once, allowing time for a cold server.
-      final res = await _api.get('/auth/me', timeout: const Duration(seconds: 75));
-      await _setUser(res['user']);
-    } on ApiException catch (e) {
-      if (e.status == 401) return _signOutLocal();
-      startupError = e.message;
-      notifyListeners();
+      // Show the app immediately with the saved profile, then sync with the server.
+      _api.token = token;
+      _applyUser(jsonDecode(cached) as Map<String, dynamic>);
+      refreshUser();
     } catch (e) {
       startupError = 'Something went wrong while starting the app.';
       debugPrint('Startup failed: $e');

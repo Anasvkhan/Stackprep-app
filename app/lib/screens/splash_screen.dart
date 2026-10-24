@@ -45,7 +45,8 @@ class SplashScreen extends StatelessWidget {
                     Text('StackPrep',
                         style: t.textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 28),
-                    if (error == null) ...[
+                    // Startup only reads local storage, so this shows for a split second.
+                    if (error == null)
                       const SizedBox(
                         width: 30,
                         height: 30,
@@ -55,22 +56,8 @@ class SplashScreen extends StatelessWidget {
                           backgroundColor: Color(0x33FFFFFF),
                           strokeCap: StrokeCap.round,
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Only appears if startup is slow (sleeping server on first launch).
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: const Text(
-                          'Waking up the server...\nThe first launch can take up to a minute.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, height: 1.5),
-                        ),
-                      ).animate().fadeIn(delay: 5.seconds, duration: 600.ms),
-                    ] else
+                      )
+                    else
                       _ErrorCard(message: error!, onRetry: onRetry).animate().fadeIn().slideY(begin: 0.15, end: 0),
                   ],
                 ),
