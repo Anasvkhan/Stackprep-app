@@ -34,11 +34,12 @@ Future<void> startQuiz(
   required String title,
   bool skipSetup = false,
 }) async {
-  final userLevel = context.read<AppState>().user?.level ?? 1;
+  // Track and topic quizzes start on "All levels": most topics only have a few MCQs,
+  // often none at the user's own level, so pre-filtering by level returned nothing.
   QuizConfig? config = QuizConfig(
     track: track,
     topic: topic,
-    level: skipSetup ? level : (level ?? userLevel),
+    level: level,
     mode: mode,
     title: title,
   );
