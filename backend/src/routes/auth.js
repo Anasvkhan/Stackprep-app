@@ -86,12 +86,20 @@ router.post(
         attempts: 0,
       };
       await user.save();
-      await sendMail({
-        to: user.email,
-        subject: `${code} is your StackPrep password reset code`,
-        text: `Hi ${user.name},\n\nYour StackPrep password reset code is ${code}.\nIt expires in 10 minutes.\n\nIf you didn't ask to reset your password, you can ignore this email.`,
-        html: `<p>Hi ${escapeHtml(user.name)},</p><p>Your StackPrep password reset code is</p><p style="font-size:28px;font-weight:700;letter-spacing:6px;font-family:monospace">${code}</p><p>It expires in 10 minutes.</p><p style="color:#64748b">If you didn't ask to reset your password, you can ignore this email.</p>`,
-      });
+      try {
+        await sendMail({
+          to: user.email,
+          subject: `${code} is your StackPrep password reset code`,
+          params: { to_name: user.name, code },
+          text: `Hi ${user.name},\n\nYour StackPrep password reset code is ${code}.\nIt expires in 10 minutes.\n\nIf you didn't ask to reset your password, you can ignore this email.`,
+          html: `<p>Hi ${escapeHtml(user.name)},</p><p>Your StackPrep password reset code is</p><p style="font-size:28px;font-weight:700;letter-spacing:6px;font-family:monospace">${code}</p><p>It expires in 10 minutes.</p><p style="color:#64748b">If you didn't ask to reset your password, you can ignore this email.</p>`,
+        });
+      } catch (err) {
+        // The email never left: drop the code so the user can retry right away.
+        user.resetCode = undefined;
+        await user.save();
+        throw err;
+      }
     }
     res.json({ message: SENT_MESSAGE });
   })

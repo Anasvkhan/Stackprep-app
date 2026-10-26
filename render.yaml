@@ -18,6 +18,14 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 30d
+      - key: EMAILJS_SERVICE_ID
+        sync: false # EmailJS (preferred): entered in the Render dashboard
+      - key: EMAILJS_TEMPLATE_ID
+        sync: false
+      - key: EMAILJS_PUBLIC_KEY
+        sync: false
+      - key: EMAILJS_PRIVATE_KEY
+        sync: false
       - key: MAILJET_API_KEY
         sync: false # Mailjet API key, entered in the Render dashboard
       - key: MAILJET_SECRET_KEY

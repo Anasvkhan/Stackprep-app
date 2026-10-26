@@ -1,34 +1,69 @@
 const ApiError = require('./ApiError');
 
-// Transactional email through Mailjet's Send API v3.1 (https://dev.mailjet.com/email/guides/send-api-v31/).
-// Needs MAILJET_API_KEY, MAILJET_SECRET_KEY and MAIL_FROM_EMAIL (a sender verified in Mailjet);
-// MAIL_FROM_NAME is optional.
-async function sendMail({ to, subject, text, html }) {
-  const apiKey = process.env.MAILJET_API_KEY;
-  const secretKey = process.env.MAILJET_SECRET_KEY;
-  const fromEmail = process.env.MAIL_FROM_EMAIL;
+// Transactional email. Two providers, picked by which variables are set:
+//   EmailJS  (sends from your own Gmail): EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID,
+//            EMAILJS_PUBLIC_KEY, EMAILJS_PRIVATE_KEY  -> https://www.emailjs.com/docs/rest-api/send/
+//   Mailjet: MAILJET_API_KEY, MAILJET_SECRET_KEY, MAIL_FROM_EMAIL (verified sender)
+// EmailJS wins when both are configured. MAIL_FROM_NAME is optional.
 
-  if (!apiKey || !secretKey || !fromEmail) {
-    // Render sets RENDER=true on its services, so a missing NODE_ENV there still counts as production.
-    if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
-      console.error('Email not sent: MAILJET_API_KEY, MAILJET_SECRET_KEY or MAIL_FROM_EMAIL is not set');
-      throw new ApiError(503, 'Email service is not configured. Please try again later.');
-    }
-    // Local development without Mailjet: print the email instead of sending it.
-    console.log(`[mail:dev] to=${to} subject="${subject}"\n${text}`);
-    return;
+const EMAILJS_VARS = ['EMAILJS_SERVICE_ID', 'EMAILJS_TEMPLATE_ID', 'EMAILJS_PUBLIC_KEY', 'EMAILJS_PRIVATE_KEY'];
+const MAILJET_VARS = ['MAILJET_API_KEY', 'MAILJET_SECRET_KEY', 'MAIL_FROM_EMAIL'];
+const has = (vars) => vars.every((k) => process.env[k]);
+
+function provider() {
+  if (has(EMAILJS_VARS)) return 'emailjs';
+  if (has(MAILJET_VARS)) return 'mailjet';
+  return null;
+}
+
+// a***@gmail.com: enough to recognise in logs without writing the full address.
+const maskEmail = (email) => String(email).replace(/^(.)[^@]*/, '$1***');
+
+const sendFailed = () => new ApiError(502, 'Could not send the email. Please try again in a moment.');
+
+async function post(name, url, init) {
+  const res = await fetch(url, { method: 'POST', ...init, signal: AbortSignal.timeout(15000) }).catch((err) => {
+    console.error(`${name} request failed:`, err.message);
+    return null;
+  });
+  if (!res) throw sendFailed();
+  return res;
+}
+
+// `params` are extra values for the EmailJS template (e.g. {{code}}, {{to_name}}).
+async function viaEmailJs({ to, subject, text, params }) {
+  const res = await post('EmailJS', 'https://api.emailjs.com/api/v1.0/email/send', {
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      service_id: process.env.EMAILJS_SERVICE_ID,
+      template_id: process.env.EMAILJS_TEMPLATE_ID,
+      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      accessToken: process.env.EMAILJS_PRIVATE_KEY,
+      template_params: {
+        to_email: to,
+        subject,
+        message: text,
+        from_name: process.env.MAIL_FROM_NAME || 'StackPrep',
+        ...params,
+      },
+    }),
+  });
+  const body = await res.text().catch(() => '');
+  if (!res.ok) {
+    console.error(`EmailJS responded ${res.status}: ${body}`);
+    throw sendFailed();
   }
+  console.log(`[mail] accepted by EmailJS for ${maskEmail(to)}`);
+}
 
-  const res = await fetch('https://api.mailjet.com/v3.1/send', {
-    method: 'POST',
-    headers: {
-      authorization: `Basic ${Buffer.from(`${apiKey}:${secretKey}`).toString('base64')}`,
-      'content-type': 'application/json',
-    },
+async function viaMailjet({ to, subject, text, html }) {
+  const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
+  const res = await post('Mailjet', 'https://api.mailjet.com/v3.1/send', {
+    headers: { authorization: `Basic ${auth}`, 'content-type': 'application/json' },
     body: JSON.stringify({
       Messages: [
         {
-          From: { Email: fromEmail, Name: process.env.MAIL_FROM_NAME || 'StackPrep' },
+          From: { Email: process.env.MAIL_FROM_EMAIL, Name: process.env.MAIL_FROM_NAME || 'StackPrep' },
           To: [{ Email: to }],
           Subject: subject,
           TextPart: text,
@@ -36,23 +71,37 @@ async function sendMail({ to, subject, text, html }) {
         },
       ],
     }),
-    signal: AbortSignal.timeout(15000),
-  }).catch((err) => {
-    console.error('Mailjet request failed:', err.message);
-    return null;
   });
-
-  const body = res ? await res.json().catch(() => null) : null;
-  const status = body?.Messages?.[0]?.Status;
-  if (!res || !res.ok || status !== 'success') {
-    if (res) console.error(`Mailjet responded ${res.status}: ${JSON.stringify(body)}`);
-    throw new ApiError(502, 'Could not send the email. Please try again in a moment.');
+  const body = await res.json().catch(() => null);
+  if (!res.ok || body?.Messages?.[0]?.Status !== 'success') {
+    console.error(`Mailjet responded ${res.status}: ${JSON.stringify(body)}`);
+    throw sendFailed();
   }
   const sent = body.Messages[0].To?.[0] || {};
-  console.log(`[mail] accepted by Mailjet for ${maskEmail(to)} from ${fromEmail} (MessageID ${sent.MessageID}, UUID ${sent.MessageUUID})`);
+  console.log(`[mail] accepted by Mailjet for ${maskEmail(to)} (MessageID ${sent.MessageID})`);
 }
 
-// a***@gmail.com: enough to recognise in logs without writing the full address.
-const maskEmail = (email) => String(email).replace(/^(.)[^@]*/, '$1***');
+async function sendMail(mail) {
+  const p = provider();
+  if (p === 'emailjs') return viaEmailJs(mail);
+  if (p === 'mailjet') return viaMailjet(mail);
 
-module.exports = { sendMail, maskEmail };
+  // Render sets RENDER=true on its services, so a missing NODE_ENV there still counts as production.
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+    console.error('Email not sent: no email provider configured (EmailJS or Mailjet variables missing)');
+    throw new ApiError(503, 'Email service is not configured. Please try again later.');
+  }
+  // Local development without a provider: print the email instead of sending it.
+  console.log(`[mail:dev] to=${mail.to} subject="${mail.subject}"\n${mail.text}`);
+}
+
+/// Startup summary for the logs: provider name only, never key values.
+function describeMailConfig() {
+  const p = provider();
+  if (p === 'emailjs') return '[mail] using EmailJS';
+  if (p === 'mailjet') return `[mail] using Mailjet, sender ${process.env.MAIL_FROM_EMAIL}`;
+  const missingJs = EMAILJS_VARS.filter((k) => !process.env[k]);
+  return `[mail] NOT configured. For EmailJS set: ${missingJs.join(', ')}`;
+}
+
+module.exports = { sendMail, maskEmail, describeMailConfig };
