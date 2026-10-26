@@ -9,7 +9,8 @@ async function sendMail({ to, subject, text, html }) {
   const fromEmail = process.env.MAIL_FROM_EMAIL;
 
   if (!apiKey || !secretKey || !fromEmail) {
-    if (process.env.NODE_ENV === 'production') {
+    // Render sets RENDER=true on its services, so a missing NODE_ENV there still counts as production.
+    if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
       console.error('Email not sent: MAILJET_API_KEY, MAILJET_SECRET_KEY or MAIL_FROM_EMAIL is not set');
       throw new ApiError(503, 'Email service is not configured. Please try again later.');
     }
@@ -47,6 +48,11 @@ async function sendMail({ to, subject, text, html }) {
     if (res) console.error(`Mailjet responded ${res.status}: ${JSON.stringify(body)}`);
     throw new ApiError(502, 'Could not send the email. Please try again in a moment.');
   }
+  const sent = body.Messages[0].To?.[0] || {};
+  console.log(`[mail] accepted by Mailjet for ${maskEmail(to)} from ${fromEmail} (MessageID ${sent.MessageID}, UUID ${sent.MessageUUID})`);
 }
 
-module.exports = { sendMail };
+// a***@gmail.com: enough to recognise in logs without writing the full address.
+const maskEmail = (email) => String(email).replace(/^(.)[^@]*/, '$1***');
+
+module.exports = { sendMail, maskEmail };

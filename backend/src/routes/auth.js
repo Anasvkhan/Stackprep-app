@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
-const { sendMail } = require('../utils/mailer');
+const { sendMail, maskEmail } = require('../utils/mailer');
 const { protect, signToken } = require('../middleware/auth');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,6 +74,9 @@ router.post(
 
     const user = await User.findOne({ email }).select(RESET_FIELDS);
     const recentlySent = user?.resetCode?.sentAt && Date.now() - user.resetCode.sentAt.getTime() < RESEND_AFTER_MS;
+    // Server-side only: the client always gets the same answer.
+    if (!user) console.log(`[forgot-password] no account for ${maskEmail(email)}, nothing sent`);
+    else if (recentlySent) console.log(`[forgot-password] code for ${maskEmail(email)} was sent under a minute ago, not resending`);
     if (user && !recentlySent) {
       const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
       user.resetCode = {
