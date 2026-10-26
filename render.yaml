@@ -18,9 +18,11 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 30d
-      - key: BREVO_API_KEY
-        sync: false # Brevo API key, entered in the Render dashboard
+      - key: MAILJET_API_KEY
+        sync: false # Mailjet API key, entered in the Render dashboard
+      - key: MAILJET_SECRET_KEY
+        sync: false # Mailjet secret key, entered in the Render dashboard
       - key: MAIL_FROM_EMAIL
-        sync: false # sender email verified in Brevo
+        sync: false # sender email verified in Mailjet
       - key: MAIL_FROM_NAME
         value: StackPrep

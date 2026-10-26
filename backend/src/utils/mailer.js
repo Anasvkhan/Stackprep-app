@@ -1,39 +1,50 @@
 const ApiError = require('./ApiError');
 
-// Transactional email through Brevo's HTTP API (https://developers.brevo.com/reference/sendtransacemail).
-// Needs BREVO_API_KEY and MAIL_FROM_EMAIL (a sender verified in Brevo); MAIL_FROM_NAME is optional.
+// Transactional email through Mailjet's Send API v3.1 (https://dev.mailjet.com/email/guides/send-api-v31/).
+// Needs MAILJET_API_KEY, MAILJET_SECRET_KEY and MAIL_FROM_EMAIL (a sender verified in Mailjet);
+// MAIL_FROM_NAME is optional.
 async function sendMail({ to, subject, text, html }) {
-  const apiKey = process.env.BREVO_API_KEY;
+  const apiKey = process.env.MAILJET_API_KEY;
+  const secretKey = process.env.MAILJET_SECRET_KEY;
   const fromEmail = process.env.MAIL_FROM_EMAIL;
 
-  if (!apiKey || !fromEmail) {
+  if (!apiKey || !secretKey || !fromEmail) {
     if (process.env.NODE_ENV === 'production') {
-      console.error('Email not sent: BREVO_API_KEY or MAIL_FROM_EMAIL is not set');
+      console.error('Email not sent: MAILJET_API_KEY, MAILJET_SECRET_KEY or MAIL_FROM_EMAIL is not set');
       throw new ApiError(503, 'Email service is not configured. Please try again later.');
     }
-    // Local development without Brevo: print the email instead of sending it.
+    // Local development without Mailjet: print the email instead of sending it.
     console.log(`[mail:dev] to=${to} subject="${subject}"\n${text}`);
     return;
   }
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+  const res = await fetch('https://api.mailjet.com/v3.1/send', {
     method: 'POST',
-    headers: { 'api-key': apiKey, 'content-type': 'application/json', accept: 'application/json' },
+    headers: {
+      authorization: `Basic ${Buffer.from(`${apiKey}:${secretKey}`).toString('base64')}`,
+      'content-type': 'application/json',
+    },
     body: JSON.stringify({
-      sender: { email: fromEmail, name: process.env.MAIL_FROM_NAME || 'StackPrep' },
-      to: [{ email: to }],
-      subject,
-      textContent: text,
-      htmlContent: html,
+      Messages: [
+        {
+          From: { Email: fromEmail, Name: process.env.MAIL_FROM_NAME || 'StackPrep' },
+          To: [{ Email: to }],
+          Subject: subject,
+          TextPart: text,
+          HTMLPart: html,
+        },
+      ],
     }),
     signal: AbortSignal.timeout(15000),
   }).catch((err) => {
-    console.error('Brevo request failed:', err.message);
+    console.error('Mailjet request failed:', err.message);
     return null;
   });
 
-  if (!res || !res.ok) {
-    if (res) console.error(`Brevo responded ${res.status}: ${await res.text().catch(() => '')}`);
+  const body = res ? await res.json().catch(() => null) : null;
+  const status = body?.Messages?.[0]?.Status;
+  if (!res || !res.ok || status !== 'success') {
+    if (res) console.error(`Mailjet responded ${res.status}: ${JSON.stringify(body)}`);
     throw new ApiError(502, 'Could not send the email. Please try again in a moment.');
   }
 }
