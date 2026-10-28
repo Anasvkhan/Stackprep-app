@@ -55,15 +55,15 @@ function toBase62(n) {
       {
         t: 'mcq', l: 2,
         q: 'How many unique codes can a 7-character Base62 short code represent?',
-        o: ['~62 million', '~3.5 billion', '~3.5 trillion', '~7 trillion'],
+        o: ['~7 trillion', '~3.5 billion', '~3.5 trillion', '~62 million'],
         a: 2,
         e: '62^7 = 3,521,614,606,208 ≈ 3.5 trillion combinations.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Should a URL shortener redirect with 301 or 302?',
-        o: ['Always 301 because it is faster for everybody', '301 (permanent) is cached by browsers and reduces load but hides repeat clicks from analytics; 302 (temporary) hits the server each time so clicks can be tracked', 'Always 404', 'Always 200 with the long URL in the body'],
-        a: 1,
+        o: ['301 is cached and cuts load but hides repeat clicks; 302 hits the server so clicks are tracked', 'Always 302, because browsers refuse to follow 301 redirects to other domains', 'Always 301, because it is cached by browsers and the analytics service still sees every single click', 'Always 200 with the long URL in the body, so the client redirects itself'],
+        a: 0,
         e: 'Trade-off: 301 = less server load, worse analytics; 302/307 = every click goes through your service, enabling accurate click tracking. bit.ly uses 301 but many analytics-focused services use 302.',
       },
       {
@@ -136,8 +136,8 @@ Checkout -> Payment Service -> Payment Executor -> PSP (Stripe/Adyen/PayPal) -> 
       {
         t: 'mcq', l: 2,
         q: 'What is the MOST important technique to prevent double charging when a payment request times out and the client retries?',
-        o: ['Increase the timeout', 'Idempotency keys passed to your API and to the payment provider', 'Use a faster database', 'Retry without any key'],
-        a: 1,
+        o: ['Retry immediately, without any key, until it succeeds', 'Increase the timeout so the first request can finish', 'Use a faster database so payments commit sooner', 'Idempotency keys passed to your API and the provider'],
+        a: 3,
         e: 'A timeout doesn\'t mean failure – the charge may have succeeded. With the same idempotency key, the retry returns the original result instead of charging again.',
       },
       {
@@ -161,8 +161,8 @@ Store in an ACID relational DB; use integer minor units (cents) – **never floa
       {
         t: 'mcq', l: 1,
         q: 'How should monetary amounts be stored?',
-        o: ['As floating point numbers (e.g. 10.99)', 'As integers in the smallest unit (e.g. 1099 cents) or a decimal type, with currency code', 'As strings with currency symbol "$10.99"', 'It does not matter'],
-        a: 1,
+        o: ['As floating point numbers (e.g. 10.99), rounded to two decimals only when displayed to the user', 'It does not matter, as long as the column type is numeric', 'As integers in the smallest unit (e.g. 1099 cents) or a decimal, with currency', 'As strings with the currency symbol, such as "$10.99"'],
+        a: 2,
         e: 'Floating point cannot represent many decimals exactly (0.1 + 0.2 != 0.3). Use integer minor units or DECIMAL/NUMERIC, and always store the ISO currency code.',
       },
       {
@@ -184,8 +184,8 @@ Never auto-retry with a *new* idempotency key – that risks a double charge.`,
       {
         t: 'mcq', l: 2,
         q: 'Why do merchants use the payment provider\'s hosted fields / SDK tokenization instead of sending raw card numbers to their own backend?',
-        o: ['It is faster', 'Card data never touches the merchant\'s servers, drastically reducing PCI-DSS compliance scope and breach risk', 'It is required by HTTP', 'It avoids using HTTPS'],
-        a: 1,
+        o: ['Card data never touches the merchant\'s servers, shrinking PCI-DSS scope and risk', 'It lets the checkout page avoid HTTPS, since the SDK encrypts everything', 'It is required by the HTTP specification for any HTML form that takes card payments from users', 'It is faster, because the provider\'s servers are closer to the customer'],
+        a: 0,
         e: 'Tokenization means the merchant only stores a token (e.g. pm_123), not the PAN. Handling raw card data requires the strictest PCI-DSS level.',
       },
       {
@@ -263,15 +263,15 @@ Paxos solves the same problem but is harder to understand; Raft was designed for
       {
         t: 'mcq', l: 2,
         q: 'How many node failures can a 5-node Raft/etcd cluster tolerate while still making progress?',
-        o: ['1', '2', '3', '4'],
+        o: ['3', '2', '1', '4'],
         a: 1,
         e: 'A majority (quorum) of 3 out of 5 must be available, so up to 2 nodes can fail. That is why clusters use odd sizes (3, 5, 7).',
       },
       {
         t: 'mcq', l: 3,
         q: 'Why do consensus clusters usually have an odd number of nodes?',
-        o: ['Odd numbers are faster', 'An even number adds cost without increasing fault tolerance (4 nodes tolerate 1 failure, same as 3)', 'Raft cannot run with even nodes', 'For licensing reasons'],
-        a: 1,
+        o: ['Raft cannot elect a leader when the cluster has an even number of nodes', 'Consensus software is licensed per pair of nodes, so an odd number of nodes is always cheaper to run', 'Odd numbers of nodes reach consensus faster on every write', 'An even number adds cost without more fault tolerance (4 tolerate 1, same as 3)'],
+        a: 3,
         e: 'Quorum = floor(N/2) + 1. 3 nodes -> quorum 2 (tolerates 1). 4 nodes -> quorum 3 (still tolerates 1). Odd sizes maximize tolerance per node.',
       },
       {
@@ -323,8 +323,8 @@ An operation is **idempotent** if performing it multiple times has the **same ef
       {
         t: 'mcq', l: 3,
         q: 'What is a fencing token?',
-        o: ['A firewall rule', 'A monotonically increasing number issued with each lock/lease, which the storage system checks so writes from a stale lock holder are rejected', 'An OAuth token', 'A token bucket parameter'],
-        a: 1,
+        o: ['An increasing number issued with each lock, checked by storage to reject stale holders', 'A firewall rule that fences off a service from the public network', 'An OAuth token that is scoped to a single service and expires quickly', 'A token bucket parameter that limits how often the same client can acquire a lock on a resource'],
+        a: 0,
         e: 'If an old leader wakes up from a GC pause and writes with token 33 while the new leader has token 34, the storage rejects token 33.',
       },
       {
@@ -362,8 +362,8 @@ They are often used together but are independent patterns.`,
       {
         t: 'mcq', l: 1,
         q: 'Where should user-uploaded profile pictures be stored in a scalable web app?',
-        o: ['In the relational database as BLOBs', 'On the local disk of the web server', 'In object storage (e.g. S3) with the URL/key saved in the database, served via CDN', 'In Redis'],
-        a: 2,
+        o: ['On the local disk of each web server', 'In object storage (e.g. S3), served via CDN', 'In Redis, with a long expiry time', 'In the relational database as BLOB columns on the user row'],
+        a: 1,
         e: 'Local disks break when you have multiple stateless servers; DB BLOBs bloat the database. Object storage + CDN is cheap, durable and scalable.',
       },
       {
@@ -380,7 +380,7 @@ They are often used together but are independent patterns.`,
       {
         t: 'mcq', l: 2,
         q: 'What is the main benefit of pre-signed URLs for uploads?',
-        o: ['They compress files', 'Clients upload directly to object storage with temporary permission, so files don\'t pass through your app servers', 'They make files public forever', 'They encrypt the database'],
+        o: ['They encrypt the database row that stores the file\'s URL', 'Clients upload straight to object storage, bypassing your app servers', 'They compress files before upload, saving bandwidth', 'They make uploaded files public forever, so no authentication is needed to read them later'],
         a: 1,
         e: 'Pre-signed URLs grant time-limited permission for a specific operation on a specific key, offloading bandwidth and work from your servers.',
       },
@@ -425,7 +425,7 @@ A SQL \`LIKE '%redis%'\` can't use a B-tree index and scans everything; an inver
       {
         t: 'mcq', l: 2,
         q: 'Why shouldn\'t Elasticsearch usually be the primary source of truth?',
-        o: ['It cannot store JSON', 'It is near real-time and optimized for search; it lacks ACID transactions, so data should be synced from a primary DB', 'It is too slow for search', 'It only supports numbers'],
+        o: ['It cannot store JSON documents with nested fields', 'It is near real-time and lacks ACID transactions, so sync it from a primary DB', 'It is too slow for full-text search on large datasets', 'It only supports numeric and keyword fields, so long text must be stored in another database'],
         a: 1,
         e: 'Elasticsearch is typically a secondary index fed from the primary database (via CDC/events) so it can be rebuilt any time.',
       },
@@ -479,8 +479,8 @@ Expect **eventual consistency** (usually < 1-2 seconds).`,
       {
         t: 'mcq', l: 2,
         q: 'How should passwords be stored?',
-        o: ['Encrypted with AES so they can be decrypted later', 'Hashed with a slow, salted algorithm like bcrypt, scrypt or Argon2', 'Hashed with MD5', 'In plain text in a secure database'],
-        a: 1,
+        o: ['In plain text in a well-secured database', 'Hashed with MD5 or SHA-1 for speed', 'Encrypted with AES-256 so they can be decrypted later if needed', 'Hashed with a slow, salted algorithm like bcrypt or Argon2'],
+        a: 3,
         e: 'Passwords should be one-way hashed with a slow, salted algorithm resistant to brute force. Fast hashes (MD5/SHA-1) are crackable with GPUs; encryption is reversible.',
       },
       {
@@ -505,8 +505,8 @@ Expect **eventual consistency** (usually < 1-2 seconds).`,
       {
         t: 'mcq', l: 2,
         q: 'What is SSRF (Server-Side Request Forgery)?',
-        o: ['Injecting SQL into forms', 'Tricking a server into making requests to internal resources (e.g. cloud metadata endpoint 169.254.169.254) on the attacker\'s behalf', 'Stealing session cookies via JavaScript', 'Brute forcing passwords'],
-        a: 1,
+        o: ['Tricking a server into requesting internal resources (e.g. cloud metadata) for the attacker', 'Stealing session cookies through injected JavaScript on the page', 'Injecting SQL into form fields to read data from the database', 'Brute forcing user passwords by sending many login requests from a compromised server'],
+        a: 0,
         e: 'Features like "fetch image from URL" can be abused to hit internal services. Mitigate with URL allowlists, blocking private IP ranges, IMDSv2 on AWS, and network egress controls.',
       },
     ],
@@ -540,15 +540,15 @@ Always **test** DR regularly (game days) – an untested backup is not a backup.
       {
         t: 'mcq', l: 2,
         q: 'Active-passive vs active-active failover: which statement is true?',
-        o: ['In active-passive, both nodes serve traffic', 'In active-active, all nodes serve traffic; in active-passive, the standby only takes over on failure', 'Active-active never needs data replication', 'They are the same'],
-        a: 1,
+        o: ['In active-passive, both nodes serve traffic at the same time', 'They are the same; the terms differ only between cloud providers like AWS, Azure and Google Cloud', 'In active-active all nodes serve traffic; in active-passive the standby takes over on failure', 'Active-active never needs data replication between its nodes'],
+        a: 2,
         e: 'Active-passive keeps a standby idle (simpler, wasted capacity). Active-active uses all capacity but needs load balancing and handling of concurrent writes/conflicts.',
       },
       {
         t: 'mcq', l: 1,
         q: 'What is the purpose of deploying across multiple Availability Zones (AZs)?',
-        o: ['To reduce code size', 'To survive the failure of a single data center while keeping low latency between zones', 'To avoid using a load balancer', 'To make the database faster'],
-        a: 1,
+        o: ['To make database queries faster by running them in parallel across every zone at once', 'To reduce the size of the deployed code in each region', 'To survive one data center failing while keeping low latency between zones', 'To avoid needing a load balancer in front of the application'],
+        a: 2,
         e: 'AZs are physically separate data centers in a region with independent power/network, connected by low-latency links. Multi-AZ protects against a data-center-level outage.',
       },
       {

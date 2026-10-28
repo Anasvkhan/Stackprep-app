@@ -64,6 +64,13 @@ function normalize(tracks) {
         if (type === 'mcq') {
           if (!Array.isArray(q.o) || q.o.length < 2) errors.push(`${at}: mcq needs options`);
           else if (!(q.a >= 0 && q.a < q.o.length)) errors.push(`${at}: answer index out of range`);
+          else {
+            // the right option must not give itself away by being much longer than every wrong one
+            const longestWrong = Math.max(...q.o.filter((_, i) => i !== q.a).map((o) => o.length));
+            if (q.o[q.a].length > 25 && q.o[q.a].length > 1.2 * longestWrong) {
+              errors.push(`${at}: correct option is much longer than the others, make the wrong options as detailed`);
+            }
+          }
         }
         if (!q.q) return;
         const key = keyFor(t.slug, tp.slug, q.q, q.c);
@@ -88,6 +95,15 @@ function normalize(tracks) {
         });
       });
     });
+  });
+
+  // the right answer should be spread across A/B/C/D, not parked in one slot
+  const mcqs = questionDocs.filter((q) => q.type === 'mcq');
+  const slots = mcqs.reduce((m, q) => ({ ...m, [q.correctIndex]: (m[q.correctIndex] || 0) + 1 }), {});
+  Object.entries(slots).forEach(([slot, n]) => {
+    if (mcqs.length >= 20 && n > 0.4 * mcqs.length) {
+      errors.push(`${n} of ${mcqs.length} MCQs have the answer at option ${'ABCD'[slot] || slot}; shuffle the options`);
+    }
   });
 
   return { errors, trackDocs, questionDocs };

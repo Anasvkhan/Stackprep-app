@@ -25,14 +25,14 @@ module.exports = {
         {
           t: 'mcq', l: 1,
           q: 'Which AWS service is object storage with 11 nines of durability?',
-          o: ['EBS', 'S3', 'EFS', 'Glacier only'],
-          a: 1,
+          o: ['EBS', 'EFS', 'S3', 'Glacier only'],
+          a: 2,
           e: 'S3 stores objects in buckets; storage classes (Standard, IA, Glacier) trade access speed for cost. EBS is block storage for EC2; EFS is a shared file system.',
         },
         {
           t: 'mcq', l: 1,
           q: 'Which service runs code in response to events without managing servers?',
-          o: ['EC2', 'AWS Lambda', 'RDS', 'Route 53'],
+          o: ['Route 53', 'AWS Lambda', 'RDS', 'EC2'],
           a: 1,
           e: 'Lambda is triggered by API Gateway, S3 events, SQS, EventBridge schedules, DynamoDB streams, etc. Max 15 minutes per invocation.',
         },
@@ -48,15 +48,15 @@ module.exports = {
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between SQS and SNS?',
-          o: ['Identical', 'SQS is a pull-based queue (one consumer per message); SNS is push-based pub/sub fan-out to many subscribers', 'SNS stores messages for 14 days', 'SQS sends SMS'],
-          a: 1,
+          o: ['SQS sends SMS and email notifications, while SNS stores messages for workers', 'They are the same service; SNS is just the newer name for SQS', 'SQS is a pull-based queue (one consumer per message); SNS is push-based pub/sub fan-out', 'SNS is a durable queue that stores messages for 14 days until a single consumer polls and deletes them'],
+          a: 2,
           e: 'A common pattern: SNS topic fanning out to multiple SQS queues so each service processes independently. EventBridge adds rich event routing.',
         },
         {
           t: 'mcq', l: 2,
           q: 'Which compute option runs containers without managing EC2 instances?',
-          o: ['EC2 Auto Scaling', 'AWS Fargate (with ECS or EKS)', 'Lightsail', 'Elastic IP'],
-          a: 1,
+          o: ['AWS Fargate (with ECS or EKS)', 'Elastic Beanstalk on dedicated hosts', 'EC2 Auto Scaling groups, which add instances when containers need capacity', 'Amazon Lightsail container instances'],
+          a: 0,
           e: 'Fargate is serverless compute for containers; you specify CPU/memory per task/pod.',
         },
       ],
@@ -83,8 +83,8 @@ Typical: ALB in public subnets -> app (ECS/EKS/EC2) in private subnets -> RDS in
         {
           t: 'mcq', l: 2,
           q: 'Security group vs Network ACL?',
-          o: ['Same thing', 'Security groups are stateful and attached to resources (allow rules only); NACLs are stateless, at subnet level, with allow and deny rules', 'NACLs are stateful', 'Security groups work at the subnet level'],
-          a: 1,
+          o: ['NACLs are stateful and attached per resource; security groups are stateless and apply to the whole subnet', 'They are the same feature; NACL is just the older name for security groups', 'Security groups work at the subnet level and support explicit deny rules, NACLs do not', 'Security groups are stateful, per-resource, allow-only; NACLs are stateless, per-subnet, allow and deny'],
+          a: 3,
           e: 'Stateful means return traffic is automatically allowed.',
         },
         {
@@ -101,8 +101,8 @@ Typical: ALB in public subnets -> app (ECS/EKS/EC2) in private subnets -> RDS in
         {
           t: 'mcq', l: 2,
           q: 'How should an application on EC2 access S3 securely?',
-          o: ['Hard-code access keys in the code', 'Attach an IAM role (instance profile) with a least-privilege policy; the SDK gets temporary credentials automatically', 'Make the bucket public', 'Store keys in environment variables in git'],
-          a: 1,
+          o: ['Attach an IAM role (instance profile) with a least-privilege policy; the SDK gets temporary credentials', 'Store long-lived access keys in a .env file committed to git so all servers share the same credentials', 'Hard-code the access keys in the application code so they ship with each deploy', 'Make the bucket public and restrict access by checking the referrer header'],
+          a: 0,
           e: 'Roles rotate credentials automatically and avoid leaked long-lived keys.',
         },
       ],
@@ -153,7 +153,7 @@ IaC: Terraform/CDK, CI/CD pipeline
         {
           t: 'mcq', l: 2,
           q: 'Which purchasing option is best for a fault-tolerant batch job that can be interrupted?',
-          o: ['On-Demand', 'Spot Instances', 'Dedicated Hosts', 'Reserved Instances for 3 years'],
+          o: ['On-Demand', 'Spot Instances', 'Reserved Instances for 3 years', 'Dedicated Hosts'],
           a: 1,
           e: 'Spot uses spare capacity at large discounts but can be reclaimed with a 2-minute warning.',
         },

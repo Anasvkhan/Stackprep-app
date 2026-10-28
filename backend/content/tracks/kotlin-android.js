@@ -16,8 +16,8 @@ module.exports = {
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between val and var in Kotlin?',
-          o: ['No difference', 'val is read-only (cannot be reassigned); var is mutable', 'var is constant', 'val is only for numbers'],
-          a: 1,
+          o: ['val is read-only; var is mutable', 'var is a constant; val can be reassigned', 'val is only allowed for numeric types', 'There is no difference; both can be reassigned'],
+          a: 0,
           e: 'val does not make the referenced object immutable. const val is a compile-time constant.',
         },
         {
@@ -35,14 +35,14 @@ Ideal for models and UI state.`,
         {
           t: 'mcq', l: 2,
           q: 'What do the scope functions let, apply, also, run and with differ in?',
-          o: ['Nothing', 'How the object is referenced (it vs this) and what they return (lambda result vs the object itself)', 'Thread they run on', 'Only naming'],
-          a: 1,
+          o: ['How the object is referenced (it vs this) and what they return', 'Nothing; they are aliases kept for readability', 'The thread or dispatcher each lambda is executed on', 'Only their names; behaviour, receivers and return values are all identical'],
+          a: 0,
           e: 'apply/also return the object (configuration, side effects); let/run/with return the lambda result (transformations, null checks with ?.let).',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is a sealed class used for?',
-          o: ['Preventing instantiation', 'Representing a restricted hierarchy of known subtypes so when-expressions can be exhaustive (e.g. UiState: Loading, Success, Error)', 'Encryption', 'Threading'],
+          o: ['Encrypting a class\'s fields so they cannot be read through reflection', 'A restricted hierarchy of known subtypes so when-expressions are exhaustive', 'Preventing instantiation so the class acts like a static utility holder with only companion members', 'Making a class thread-safe by sealing access to its mutable state'],
           a: 1,
           e: 'The compiler checks that all subtypes are handled in a when expression.',
         },
@@ -72,8 +72,8 @@ viewModelScope.launch {
         {
           t: 'mcq', l: 2,
           q: 'StateFlow vs SharedFlow?',
-          o: ['Same', 'StateFlow always holds a current value and replays it to new collectors (UI state); SharedFlow is configurable and suited for one-off events', 'SharedFlow holds state', 'StateFlow is cold'],
-          a: 1,
+          o: ['SharedFlow always holds a current state value, while StateFlow is meant only for one-off events', 'They are the same; SharedFlow is the older name for StateFlow', 'StateFlow is cold and restarts for each collector, SharedFlow is hot', 'StateFlow holds a current value and replays it (UI state); SharedFlow suits one-off events'],
+          a: 3,
           e: 'Collect flows lifecycle-aware with repeatOnLifecycle or collectAsStateWithLifecycle in Compose.',
         },
         {
@@ -89,15 +89,15 @@ viewModelScope.launch {
         {
           t: 'mcq', l: 2,
           q: 'What is Jetpack Compose recomposition?',
-          o: ['Rebuilding the APK', 'Re-running composable functions whose read state has changed to update the UI', 'Restarting the Activity', 'Garbage collection'],
+          o: ['Garbage collecting composables that are no longer on screen', 'Re-running composables whose read state changed to update the UI', 'Rebuilding the APK after code changes during development', 'Restarting the Activity when the configuration, locale or theme changes'],
           a: 1,
           e: 'Use remember, derivedStateOf, stable/immutable classes and lazy layouts to keep recompositions cheap.',
         },
         {
           t: 'mcq', l: 2,
           q: 'Which architecture is recommended by Google for Android apps?',
-          o: ['Everything in the Activity', 'Layered architecture: UI layer (Compose + ViewModel), optional domain layer, data layer (repositories), with unidirectional data flow and DI (Hilt)', 'Only MVC', 'Singletons everywhere'],
-          a: 1,
+          o: ['Everything in the Activity, which handles the UI, network calls and the database directly', 'Only classic MVC, with a Controller class for each screen and no ViewModel', 'Layered: UI layer (Compose + ViewModel), optional domain, data layer, with UDF and DI', 'Singletons everywhere so that every screen can reach shared state directly'],
+          a: 2,
           e: 'Room for local DB, Retrofit/Ktor for networking, WorkManager for background work.',
         },
       ],

@@ -31,8 +31,8 @@ module.exports = {
         {
           t: 'mcq', l: 2,
           q: 'A 5-person startup is building its first product. Which architecture is usually best?',
-          o: ['50 microservices on Kubernetes', 'A well-structured (modular) monolith', 'Serverless functions for every endpoint with separate databases', 'Microfrontends'],
-          a: 1,
+          o: ['Serverless functions for every endpoint with separate databases', '50 microservices on Kubernetes', 'Microfrontends', 'A well-structured (modular) monolith'],
+          a: 3,
           e: 'Microservices add operational cost that only pays off with scale and multiple teams. Start simple and split when boundaries are clear.',
         },
         {
@@ -49,8 +49,8 @@ module.exports = {
         {
           t: 'mcq', l: 2,
           q: 'Why is a shared database between microservices considered an anti-pattern?',
-          o: ['Databases cannot be shared', 'It tightly couples services through schema; one team\'s change can break others and services cannot deploy or scale independently', 'It is slower', 'It is more secure'],
-          a: 1,
+          o: ['Databases cannot technically accept connections from more than one service at the same time', 'A shared database is always slower than one database per service', 'It couples services through the schema; one change can break others and blocks independent deploys', 'It makes the system too secure, so services cannot read each other\'s data'],
+          a: 2,
           e: 'Database-per-service keeps encapsulation; data needed by others is exposed via APIs or events.',
         },
         {
@@ -84,8 +84,8 @@ Prerequisites: CI/CD, monitoring, tracing, automated tests, and first **modulari
         {
           t: 'mcq', l: 3,
           q: 'What is a "distributed monolith"?',
-          o: ['A monolith deployed on many servers', 'Microservices so tightly coupled (shared DB, synchronous chains, coordinated releases) that they have the downsides of both styles', 'A monolith with a CDN', 'A serverless app'],
-          a: 1,
+          o: ['A monolith that serves its static assets through a CDN in many regions while keeping one database', 'A single monolith deployed on many servers behind a load balancer', 'Microservices so tightly coupled (shared DB, sync chains) that they get the downsides of both', 'A serverless app where each function is deployed in a separate region'],
+          a: 2,
           e: 'If services must be deployed together, you have a distributed monolith.',
         },
       ],
@@ -111,15 +111,15 @@ Components communicate by producing and reacting to **events** (facts that happe
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between a command and an event?',
-          o: ['No difference', 'A command asks a specific service to do something (may be rejected); an event announces that something already happened (to any interested listeners)', 'Events are synchronous', 'Commands are broadcast to everyone'],
+          o: ['Commands are broadcast to every service, while an event targets exactly one specific service', 'A command asks a specific service to do something; an event announces what already happened', 'Events are always synchronous calls, while commands are always asynchronous', 'There is no difference; both are messages broadcast to every service'],
           a: 1,
           e: 'Commands are imperative (ChargeCard), events are past tense (CardCharged).',
         },
         {
           t: 'mcq', l: 3,
           q: 'Choreography vs orchestration in sagas: which is true?',
-          o: ['They are the same', 'Choreography: services react to each other\'s events without a central coordinator; Orchestration: a central orchestrator directs each step', 'Orchestration has no central component', 'Choreography requires 2PC'],
-          a: 1,
+          o: ['Choreography: services react to events, no coordinator; orchestration: a central orchestrator', 'They are the same; both names describe a central coordinator', 'Choreography requires two-phase commit (2PC) across all services', 'Orchestration has no central component, while choreography uses a central coordinator for each step'],
+          a: 0,
           e: 'Choreography is decentralized but harder to track; orchestration (Temporal, Step Functions, Camunda) gives visibility and explicit flow control.',
         },
       ],
@@ -165,15 +165,15 @@ Both aim to keep **business logic independent of frameworks, databases and UI**.
         {
           t: 'mcq', l: 2,
           q: 'In clean architecture, which direction should dependencies point?',
-          o: ['From domain to database', 'Inward: frameworks/DB/UI depend on use cases and domain, never the reverse', 'In both directions', 'Outward to the UI'],
+          o: ['Outward to the UI, which owns the business rules', 'Inward: frameworks/DB/UI depend on use cases and domain', 'In both directions, as long as every layer uses interfaces', 'From the domain outward to the database layer'],
           a: 1,
           e: 'The domain defines interfaces (ports) that infrastructure implements (dependency inversion).',
         },
         {
           t: 'mcq', l: 2,
           q: 'What does the Twelve-Factor App methodology recommend for configuration?',
-          o: ['Hard-code config in source', 'Store config in environment variables, separate from code', 'Keep config in the database only', 'Use XML files committed to git'],
-          a: 1,
+          o: ['Store config in environment variables', 'Keep config only in the application database', 'Use XML files committed to git', 'Hard-code config in the source'],
+          a: 0,
           e: 'Other factors include: one codebase, explicit dependencies, stateless processes, port binding, disposability, dev/prod parity, logs as event streams.',
         },
         {

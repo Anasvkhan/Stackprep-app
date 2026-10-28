@@ -29,8 +29,8 @@ Used by Docker, Kubernetes, Terraform, Prometheus, etcd and many microservices.`
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between an array and a slice in Go?',
-          o: ['No difference', 'Arrays have a fixed length that is part of the type; slices are dynamic views (pointer, length, capacity) over an underlying array', 'Slices are fixed size', 'Arrays are reference types'],
-          a: 1,
+          o: ['Arrays are reference types, so passing one to a function shares the data instead of copying it', 'Slices have a fixed size set at creation, while arrays grow with append', 'There is no difference; slice is just shorthand syntax for an array', 'Arrays have a fixed length that is part of the type; slices are dynamic views over an array'],
+          a: 3,
           e: 'Appending beyond capacity allocates a new backing array; slices sharing a backing array can affect each other.',
         },
         {
@@ -40,8 +40,8 @@ Used by Docker, Kubernetes, Terraform, Prometheus, etcd and many microservices.`
 t := s[:2]
 t = append(t, 99)
 fmt.Println(s)`,
-          o: ['[1 2 3]', '[1 2 99]', '[1 2 3 99]', 'panic'],
-          a: 1,
+          o: ['[1 2 3 99]', '[1 2 3]', '[1 2 99]', 'panic'],
+          a: 2,
           e: 't has capacity 3, so append writes into the shared backing array, overwriting s[2].',
         },
         {
@@ -63,15 +63,15 @@ if err != nil {
         {
           t: 'mcq', l: 2,
           q: 'How are interfaces implemented in Go?',
-          o: ['With the "implements" keyword', 'Implicitly: any type that has the required methods satisfies the interface', 'Through inheritance', 'Only structs can implement interfaces explicitly'],
+          o: ['By declaring them with the "implements" keyword on the struct', 'Implicitly: any type that has the required methods satisfies it', 'Through struct embedding, which inherits the interface\'s methods', 'Only structs can implement interfaces, and they must do so explicitly'],
           a: 1,
           e: 'Implicit satisfaction enables small, consumer-defined interfaces ("accept interfaces, return structs").',
         },
         {
           t: 'mcq', l: 3,
           q: 'Why can an interface holding a nil pointer be != nil?',
-          o: ['It is a compiler bug', 'An interface value is (type, value); with a typed nil pointer the type is set, so the interface itself is not nil', 'nil is not allowed in Go', 'Interfaces cannot hold pointers'],
-          a: 1,
+          o: ['Go converts nil pointers to zero values when storing them in interfaces', 'It is a known compiler bug that is fixed in newer Go versions', 'Interfaces cannot hold pointers directly, so the nil is wrapped in a new non-nil object', 'An interface value is (type, value); with a typed nil pointer the type is set'],
+          a: 3,
           e: 'Returning a typed nil *MyError as error produces a non-nil error. Return a literal nil instead.',
         },
       ],
@@ -101,15 +101,15 @@ v := <-results
         {
           t: 'mcq', l: 2,
           q: 'What does the select statement do?',
-          o: ['Selects a database row', 'Waits on multiple channel operations and proceeds with whichever is ready (with optional default for non-blocking)', 'Selects a goroutine to kill', 'Sorts channels'],
+          o: ['Selects a running goroutine to stop when the program is shutting down or out of memory', 'Waits on multiple channel operations and proceeds with whichever is ready', 'Sorts several channels by how many values are buffered in each', 'Selects rows from a database using the database/sql package'],
           a: 1,
           e: 'Common with timeouts: case <-time.After(2 * time.Second) or case <-ctx.Done().',
         },
         {
           t: 'mcq', l: 2,
           q: 'How do you wait for multiple goroutines to finish?',
-          o: ['time.Sleep', 'sync.WaitGroup (Add, Done, Wait) or errgroup.Group', 'runtime.Gosched', 'A for loop checking a bool'],
-          a: 1,
+          o: ['sync.WaitGroup (Add, Done, Wait) or errgroup', 'time.Sleep long enough for them to finish', 'runtime.Gosched in a loop until they are done', 'A for loop that polls a shared bool variable'],
+          a: 0,
           e: 'errgroup also propagates the first error and cancels a shared context.',
         },
         {
@@ -130,15 +130,15 @@ rows, err := db.QueryContext(ctx, "SELECT ...")
         {
           t: 'mcq', l: 3,
           q: 'What is a goroutine leak?',
-          o: ['Too many CPUs', 'Goroutines blocked forever (e.g. waiting on a channel nobody writes to or reads from), consuming memory', 'A panic in a goroutine', 'Using too many channels'],
-          a: 1,
+          o: ['Running more goroutines than the machine has CPU cores', 'Creating more channels than goroutines, so channels are never garbage collected', 'Goroutines blocked forever (e.g. on a channel nobody uses), consuming memory', 'A panic inside a goroutine that is not recovered and crashes the program'],
+          a: 2,
           e: 'Always provide exit paths: cancellation via context, closing channels, buffered channels for fire-and-forget results.',
         },
         {
           t: 'mcq', l: 2,
           q: 'How do you detect data races in Go?',
-          o: ['go vet only', 'Run tests or the program with the -race flag (race detector)', 'gofmt', 'It is impossible'],
-          a: 1,
+          o: ['Run tests or the program with the -race flag', 'It is impossible to detect them in Go', 'Run gofmt -s, which flags unsafe shared variable access', 'Run go vet, which reports all data races'],
+          a: 0,
           e: 'go test -race ./... reports unsynchronized concurrent memory access.',
         },
       ],

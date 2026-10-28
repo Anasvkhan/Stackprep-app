@@ -44,7 +44,7 @@ Steps from bytes to pixels:
         {
           t: 'mcq', l: 2,
           q: 'Which resource type is render-blocking by default?',
-          o: ['Images', 'CSS stylesheets in the head', 'Fonts with font-display: swap', 'Scripts with async'],
+          o: ['Scripts with async', 'CSS stylesheets in the head', 'Images', 'Fonts with font-display: swap'],
           a: 1,
           e: 'The browser will not render until CSSOM is built (to avoid unstyled flashes). Inline critical CSS and load the rest asynchronously.',
         },
@@ -68,8 +68,8 @@ Other useful metrics: TTFB, FCP, TBT. Measure in the field (CrUX, web-vitals lib
         {
           t: 'mcq', l: 2,
           q: 'Images without width/height attributes load and push content down. Which metric does this hurt?',
-          o: ['LCP', 'INP', 'CLS', 'TTFB'],
-          a: 2,
+          o: ['TTFB', 'INP', 'LCP', 'CLS'],
+          a: 3,
           e: 'Reserve space with width/height or aspect-ratio. Same for ads, embeds and late-loading fonts (use font-display and size-adjust).',
         },
         {
@@ -97,15 +97,15 @@ Other useful metrics: TTFB, FCP, TBT. Measure in the field (CrUX, web-vitals lib
         {
           t: 'mcq', l: 2,
           q: 'What does loading="lazy" on an <img> do?',
-          o: ['Compresses the image', 'Defers loading offscreen images until they are near the viewport', 'Loads the image first', 'Converts the image to WebP'],
-          a: 1,
+          o: ['Converts the image to WebP on supported browsers', 'Loads the image before all other page resources', 'Defers offscreen images until they are near the viewport', 'Compresses the image on the client before the browser renders it'],
+          a: 2,
           e: 'Great for below-the-fold images; never use it on the LCP/hero image.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is tree shaking?',
-          o: ['Removing unused CSS classes at runtime', 'Eliminating unused exports from the JS bundle during build, based on static ES module imports', 'Shaking the DOM tree', 'Lazy loading routes'],
-          a: 1,
+          o: ['Removing unused exports from the JS bundle at build time', 'Re-rendering the DOM tree to drop hidden elements', 'Removing unused CSS classes from the page at runtime as the DOM changes', 'Lazy loading routes only when the user visits them'],
+          a: 0,
           e: 'Bundlers (Webpack, Rollup, Vite/esbuild) remove dead code. CommonJS and side-effectful modules limit it.',
         },
         {

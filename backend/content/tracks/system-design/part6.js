@@ -33,7 +33,7 @@ Signature: HMACSHA256(base64url(header) + "." + base64url(payload), secret)
       {
         t: 'mcq', l: 1,
         q: 'Can anyone read the payload of a standard (JWS) JWT without the secret key?',
-        o: ['No, it is encrypted', 'Yes, it is only Base64URL encoded; the signature prevents tampering, not reading', 'Only the issuer can read it', 'Only with the public key'],
+        o: ['Only clients holding the public key can decode the payload', 'Yes, it is only Base64URL encoded; the signature prevents tampering', 'Only the issuer can read it, because the payload is tied to its domain', 'No, the payload is encrypted and needs the secret key to decrypt'],
         a: 1,
         e: 'A signed JWT is not encrypted. Decode it at jwt.io and you will see the claims. Do not put sensitive data in it.',
       },
@@ -74,8 +74,8 @@ Signature: HMACSHA256(base64url(header) + "." + base64url(payload), secret)
       {
         t: 'mcq', l: 2,
         q: 'Where is the safest place to store tokens in a browser web app to protect against XSS?',
-        o: ['localStorage', 'sessionStorage', 'HttpOnly, Secure, SameSite cookie', 'A global JavaScript variable in window'],
-        a: 2,
+        o: ['HttpOnly, Secure, SameSite cookie', 'sessionStorage', 'A global JavaScript variable in window', 'localStorage'],
+        a: 0,
         e: 'HttpOnly cookies can\'t be read by JavaScript, so XSS can\'t steal them. Use SameSite and CSRF tokens to guard against CSRF.',
       },
       {
@@ -106,8 +106,8 @@ PKCE prevents an intercepted code from being used by an attacker. The **Implicit
       {
         t: 'mcq', l: 2,
         q: 'What does OpenID Connect (OIDC) add on top of OAuth 2.0?',
-        o: ['Encryption of all API traffic', 'An authentication layer: an ID token (JWT) with user identity, plus a userinfo endpoint', 'A new database', 'Rate limiting'],
-        a: 1,
+        o: ['A user database that OAuth providers must use to store accounts', 'Rate limiting for token endpoints to stop brute-force attacks', 'An authentication layer: an ID token (JWT) plus a userinfo endpoint', 'End-to-end encryption of all API traffic between the client and the resource server'],
+        a: 2,
         e: 'OAuth 2.0 is about authorization (access tokens). OIDC adds authentication: "Login with Google" returns an ID token describing who the user is.',
       },
       {
@@ -137,8 +137,8 @@ JWTs are stateless, so revocation needs some state:
       {
         t: 'mcq', l: 2,
         q: 'What is SSO (Single Sign-On)?',
-        o: ['Using one password for every website', 'Logging in once with a central identity provider to access multiple applications', 'A type of database index', 'Encrypting a single session'],
-        a: 1,
+        o: ['Encrypting a single session cookie that is shared by all browser tabs and devices', 'A database index that allows only one session per user', 'Logging in once with a central identity provider to access many apps', 'Using the same password on every website you sign up for'],
+        a: 2,
         e: 'SSO uses protocols like SAML 2.0 or OIDC: users authenticate once with an IdP (Okta, Azure AD, Google) and are signed into many apps.',
       },
       {
@@ -213,29 +213,29 @@ Policy engines: OPA (Open Policy Agent), Casbin, Cerbos, AWS Cedar.`,
       {
         t: 'mcq', l: 1,
         q: 'A logged-in user tries to access an admin-only endpoint. Which status code is correct?',
-        o: ['401 Unauthorized', '403 Forbidden', '404 Not Found', '400 Bad Request'],
-        a: 1,
+        o: ['400 Bad Request', '401 Unauthorized', '403 Forbidden', '404 Not Found'],
+        a: 2,
         e: 'The user is authenticated (we know who they are) but lacks permission -> 403. 401 means missing or invalid credentials. Some APIs return 404 to hide the existence of resources.',
       },
       {
         t: 'mcq', l: 1,
         q: 'Which status code should a successful POST that creates a new resource return?',
-        o: ['200 OK', '201 Created', '204 No Content', '202 Accepted'],
-        a: 1,
+        o: ['204 No Content', '202 Accepted', '200 OK', '201 Created'],
+        a: 3,
         e: '201 Created, typically with a Location header pointing to the new resource and the created object in the body.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Nginx returns 504 to the client. What most likely happened?',
-        o: ['The client sent invalid JSON', 'The upstream application server took too long to respond', 'The URL does not exist', 'The user is not logged in'],
-        a: 1,
+        o: ['The user is not logged in or the token expired', 'The requested URL does not exist on the server', 'The upstream app server took too long to respond', 'The client sent invalid JSON in the request body'],
+        a: 2,
         e: '504 Gateway Timeout = the proxy did not receive a response from the upstream in time. 502 Bad Gateway = upstream returned an invalid response or refused the connection.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which HTTP methods are idempotent?',
-        o: ['GET, PUT, DELETE (and HEAD, OPTIONS)', 'POST and PATCH only', 'Only GET', 'All methods'],
-        a: 0,
+        o: ['Only GET and HEAD', 'GET, PUT, DELETE (and HEAD, OPTIONS)', 'All HTTP methods, including POST and PATCH', 'POST and PATCH only'],
+        a: 1,
         e: 'Idempotent = repeating the request has the same effect as making it once. GET, HEAD, OPTIONS, PUT and DELETE are idempotent. POST is not, and PATCH is not guaranteed to be.',
       },
       {
@@ -270,8 +270,8 @@ Safe methods (no side effects): GET, HEAD, OPTIONS.`,
       {
         t: 'mcq', l: 2,
         q: 'What does 304 Not Modified mean?',
-        o: ['The resource was deleted', 'The cached version the client has is still valid (conditional request using ETag/If-Modified-Since)', 'The server failed to modify the resource', 'Redirect to another URL'],
-        a: 1,
+        o: ['The client\'s cached version is still valid (ETag/If-Modified-Since)', 'The server failed to modify the resource', 'The resource was deleted from the server', 'The client should redirect to another URL given in the Location header'],
+        a: 0,
         e: 'The client sent If-None-Match (ETag) or If-Modified-Since. The server says "nothing changed" with no body, saving bandwidth.',
       },
       {
@@ -348,8 +348,8 @@ SELECT * FROM posts WHERE created_at < :cursor ORDER BY created_at DESC LIMIT 20
       {
         t: 'mcq', l: 2,
         q: 'Why does "OFFSET 1000000 LIMIT 20" become slow?',
-        o: ['Because LIMIT is not supported', 'The database must read and discard 1,000,000 rows before returning 20', 'Because of network latency', 'It is not slow'],
-        a: 1,
+        o: ['LIMIT is not supported together with OFFSET', 'Network latency grows with the offset value', 'It is not slow as long as the table has a primary key index', 'The DB must read and discard 1,000,000 rows first'],
+        a: 3,
         e: 'Offset requires scanning past all skipped rows. Keyset pagination (WHERE id < last_id) seeks directly using an index.',
       },
       {
@@ -368,8 +368,8 @@ Common combo: **gRPC between services**, **REST or GraphQL at the edge** for cli
       {
         t: 'mcq', l: 2,
         q: 'Which problem does GraphQL mainly solve compared to REST?',
-        o: ['Security', 'Over-fetching and under-fetching (multiple round trips) by letting clients request exactly the fields they need', 'Database scaling', 'Binary serialization'],
-        a: 1,
+        o: ['Over- and under-fetching, by letting clients request exactly the fields they need', 'Security, by hiding the database schema from clients', 'Database scaling, by sharding queries across resolvers', 'Binary serialization, by replacing verbose JSON payloads with a compact binary format'],
+        a: 0,
         e: 'Clients specify the shape of the response, possibly spanning several resources, in a single request.',
       },
       {
@@ -403,8 +403,8 @@ Also: idempotency key on POST, job expiry, cancellation endpoint (\`DELETE /repo
       {
         t: 'mcq', l: 3,
         q: 'What is the N+1 query problem in GraphQL resolvers and a common fix?',
-        o: ['Too many GraphQL endpoints; merge them', 'Fetching a list then one DB query per item for a nested field; fix with batching via DataLoader', 'Too many mutations; use REST', 'Missing indexes; add one per field'],
-        a: 1,
+        o: ['Too many GraphQL endpoints; merge them into one', 'Too many mutations in one request; move them to REST', 'A list query then one DB query per item for a nested field; batch with DataLoader', 'Missing indexes on the fields resolvers query; fix by adding one database index per field'],
+        a: 2,
         e: 'Resolving posts -> author for 100 posts can trigger 100 author queries. DataLoader batches the ids in one tick into a single "WHERE id IN (...)" query and caches per request.',
       },
       {
@@ -456,15 +456,15 @@ Notes: PUT/DELETE for likes make them idempotent (double-tap safe); cursor pagin
       {
         t: 'mcq', l: 1,
         q: 'Which technology is best for a multiplayer game requiring low-latency bidirectional communication?',
-        o: ['Short polling', 'Server-Sent Events', 'WebSockets', 'Email'],
-        a: 2,
+        o: ['Email', 'Server-Sent Events', 'Short polling', 'WebSockets'],
+        a: 3,
         e: 'WebSockets provide persistent, full-duplex communication. (For extremely latency-sensitive games, UDP/WebRTC data channels are also used.)',
       },
       {
         t: 'mcq', l: 2,
         q: 'You need to stream live stock prices from server to browsers; clients never send data back. What is the simplest good choice?',
-        o: ['WebSockets', 'Server-Sent Events', 'Short polling every 100ms', 'gRPC unary calls'],
-        a: 1,
+        o: ['Short polling every 100ms', 'gRPC unary calls', 'WebSockets', 'Server-Sent Events'],
+        a: 3,
         e: 'SSE is simpler than WebSockets for one-way server-to-client streams, uses plain HTTP and reconnects automatically.',
       },
       {
@@ -530,14 +530,14 @@ Notes: PUT/DELETE for likes make them idempotent (double-tap safe); cursor pagin
       {
         t: 'mcq', l: 2,
         q: 'In a Twitter Snowflake ID, what makes the IDs roughly sortable by creation time?',
-        o: ['The machine id comes first', 'The most significant bits store the timestamp', 'They are random', 'They are generated by the database'],
-        a: 1,
+        o: ['The most significant bits store the timestamp', 'They are random, so sorting happens in the database', 'They are generated by an auto-increment column', 'The machine id is stored in the most significant bits'],
+        a: 0,
         e: 'The 41-bit millisecond timestamp sits in the high bits, so numeric order ≈ time order.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Why can random UUID v4 primary keys hurt write performance in MySQL InnoDB?',
-        o: ['UUIDs cannot be indexed', 'Random keys insert into random positions of the clustered B-tree causing page splits and poor cache locality', 'UUIDs are too short', 'InnoDB does not support strings'],
+        o: ['UUIDs are too short to be unique across many servers', 'Random keys insert at random spots in the clustered B-tree, causing page splits', 'UUID columns cannot be indexed in InnoDB at all', 'InnoDB does not support string or binary primary keys, so UUIDs are stored in a hidden table'],
         a: 1,
         e: 'Sequential keys append to the end of the index. Random keys scatter writes, increasing page splits, fragmentation and I/O. Use UUID v7/ULID or BIGINT.',
       },
@@ -573,8 +573,8 @@ Monitoring tells you **that** something is wrong; observability helps you ask **
       {
         t: 'mcq', l: 2,
         q: 'Why are latency percentiles (p95, p99) preferred over averages?',
-        o: ['They are easier to compute', 'Averages hide tail latency; p99 shows the experience of the slowest 1% of requests', 'Percentiles use less storage', 'Averages are always higher'],
-        a: 1,
+        o: ['Averages hide tail latency; p99 shows the slowest 1% of requests', 'Percentiles use less storage in time-series databases', 'They are easier and cheaper to compute than averages', 'Averages are always higher than percentiles, so they make the system look slower than it is'],
+        a: 0,
         e: 'An average of 100ms could hide 1% of requests taking 5 seconds. Users making many requests hit the tail often, so p95/p99 reflect real user experience.',
       },
       {
@@ -596,7 +596,7 @@ Google SRE's **Four Golden Signals:** latency, traffic, errors, saturation.`,
       {
         t: 'mcq', l: 2,
         q: 'What is the purpose of a correlation/trace ID passed through all services?',
-        o: ['To authenticate users', 'To link logs and spans from different services that belong to the same request', 'To encrypt traffic', 'To load balance requests'],
+        o: ['To load balance requests from the same user to the same instance each time', 'To link logs and spans from different services for one request', 'To authenticate the user on every downstream service', 'To encrypt traffic between services with a shared key'],
         a: 1,
         e: 'Propagating a trace id (W3C traceparent header) lets you search all logs/spans of one request across the whole system.',
       },

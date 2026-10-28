@@ -16,8 +16,8 @@ module.exports = {
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between final and const in Dart?',
-          o: ['No difference', 'final is assigned once at runtime; const is a compile-time constant (deeply immutable and canonicalized)', 'const can be reassigned', 'final is compile-time only'],
-          a: 1,
+          o: ['There is no difference; both create values that are fixed at compile time', 'const variables can be reassigned later, while final variables cannot', 'final is assigned once at runtime; const is a compile-time constant (deeply immutable)', 'final is a compile-time constant (deeply immutable), while const is assigned once at runtime'],
+          a: 2,
           e: 'final now = DateTime.now() is allowed; const now = DateTime.now() is not. Const widgets in Flutter are reused instead of rebuilt.',
         },
         {
@@ -40,21 +40,21 @@ late final Config cfg;   // initialized later, before first use
         {
           t: 'mcq', l: 2,
           q: 'What is a mixin in Dart?',
-          o: ['A type of constructor', 'A way to reuse a class\'s members across multiple class hierarchies using "with", without inheritance', 'A generic type', 'An async function'],
-          a: 1,
+          o: ['A generic type that mixes several type parameters into a single class', 'An async function that mixes Futures and Streams into one return value that can be awaited', 'A special constructor that mixes default values into a class\'s fields', 'A way to reuse a class\'s members across multiple class hierarchies using "with"'],
+          a: 3,
           e: 'Flutter uses mixins like SingleTickerProviderStateMixin and AutomaticKeepAliveClientMixin.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What does a factory constructor allow?',
-          o: ['Only creating new instances', 'Returning an existing instance, a subtype, or a cached object instead of always creating a new one', 'Making classes abstract', 'Creating isolates'],
-          a: 1,
+          o: ['Returning an existing instance, a subtype, or a cached object instead of a new one', 'Spawning a new isolate that constructs the object off the main thread', 'Marking a class as abstract so that only its subclasses can be instantiated, never the class itself', 'It can only create brand new instances, but with named parameters'],
+          a: 0,
           e: 'Common for singletons and fromJson constructors.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What are Dart 3 records and patterns?',
-          o: ['Database rows', 'Records are anonymous immutable aggregates like (int, String); patterns allow destructuring and exhaustive switch matching', 'Annotations', 'Isolate messages'],
+          o: ['Compile-time annotations that record metadata about a class and match it with generated code', 'Records are anonymous immutable aggregates like (int, String); patterns enable destructuring', 'Message formats for sending data between isolates, matched by a port pattern', 'Typed rows returned from a database query, matched against a schema pattern'],
           a: 1,
           e: 'final (lat, lng) = getLocation(); sealed classes + switch expressions give exhaustive checks.',
         },
@@ -102,14 +102,14 @@ Dart runs code in **isolates**: each has its own memory heap and a single-thread
   scheduleMicrotask(() => print('C'));
   print('D');
 }`,
-          o: ['A B C D', 'A D C B', 'A D B C', 'A C D B'],
-          a: 1,
+          o: ['A D C B', 'A D B C', 'A C D B', 'A B C D'],
+          a: 0,
           e: 'Synchronous code first (A, D), then microtasks (C), then the event queue (B).',
         },
         {
           t: 'mcq', l: 2,
           q: 'How do you run several independent futures concurrently and wait for all of them?',
-          o: ['await each in sequence', 'await Future.wait([a(), b(), c()])', 'Use a for loop with sleep', 'Use isolates for each'],
+          o: ['await a(); await b(); await c(); one after another', 'await Future.wait([a(), b(), c()])', 'Spawn a separate isolate for each future', 'Start each one in a for loop with sleep between them'],
           a: 1,
           e: 'Future.wait runs them concurrently; with Dart 3 records you can also await (a(), b()).wait.',
         },

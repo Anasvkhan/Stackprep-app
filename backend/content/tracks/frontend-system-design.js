@@ -43,15 +43,15 @@ Use only for large orgs with many teams; a well-structured monorepo is often eno
         {
           t: 'mcq', l: 2,
           q: 'Why normalize data in a client-side store (e.g. { users: { byId, allIds } })?',
-          o: ['To use less CSS', 'To avoid duplicated entities so an update in one place is reflected everywhere and lookups are O(1)', 'Because JSON requires it', 'To enable SSR'],
-          a: 1,
+          o: ['To avoid duplicated entities so one update shows everywhere and lookups are O(1)', 'Because JSON cannot store nested objects inside arrays in a client store', 'To enable server-side rendering, which only works when the store is a flat list of plain objects', 'To reduce CSS size, since components can share styles by entity id'],
+          a: 0,
           e: 'Nested duplicated data leads to inconsistent UI after updates. Redux Toolkit createEntityAdapter and Apollo cache normalize automatically.',
         },
         {
           t: 'mcq', l: 2,
           q: 'Which is the best protection against XSS in a frontend app?',
-          o: ['Hiding the source code', 'Escaping/encoding output by default (frameworks do this), avoiding dangerouslySetInnerHTML/innerHTML with user input or sanitizing with DOMPurify, plus a strict Content-Security-Policy', 'Using HTTPS only', 'Minifying JavaScript'],
-          a: 1,
+          o: ['Hiding and obfuscating the source code so attackers cannot find the input fields to inject into', 'Minifying JavaScript so injected scripts cannot call the app\'s functions', 'Escaping output by default, sanitizing user HTML (DOMPurify), plus a strict CSP', 'Serving the app over HTTPS only, so injected scripts cannot be loaded'],
+          a: 2,
           e: 'XSS injects scripts via untrusted content. Framework auto-escaping, sanitization and CSP form defense in depth.',
         },
       ],
@@ -137,7 +137,7 @@ Use only for large orgs with many teams; a well-structured monorepo is often eno
         {
           t: 'mcq', l: 2,
           q: 'For a dashboard showing live stock prices that only flow from server to client, which transport is simplest?',
-          o: ['Long polling every 100ms', 'Server-Sent Events (EventSource)', 'WebRTC', 'Email'],
+          o: ['Long polling every 100ms', 'Server-Sent Events (EventSource)', 'Email notifications', 'WebRTC peer-to-peer data channels'],
           a: 1,
           e: 'SSE is one-way, over HTTP, auto-reconnects and is easy to scale through proxies.',
         },

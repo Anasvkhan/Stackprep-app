@@ -20,8 +20,8 @@ module.exports = {
           c: `console.log(typeof null);
 console.log(typeof undefined);
 console.log(typeof NaN);`,
-          o: ['"null", "undefined", "number"', '"object", "undefined", "number"', '"object", "undefined", "NaN"', '"null", "object", "number"'],
-          a: 1,
+          o: ['"object", "undefined", "number"', '"object", "undefined", "NaN"', '"null", "undefined", "number"', '"null", "object", "number"'],
+          a: 0,
           e: '`typeof null` is "object" (a historic bug kept for compatibility). `typeof undefined` is "undefined" and `NaN` is of type "number".',
         },
         {
@@ -38,8 +38,8 @@ Everything else is an **object** (arrays, functions, dates, maps...).
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between == and ===?',
-          o: ['There is no difference', '== compares values after type coercion; === compares value and type without coercion', '=== is only for numbers', '== is faster and always recommended'],
-          a: 1,
+          o: ['== compares after type coercion; === compares value and type without coercion', '== is faster than === and is the recommended default', 'There is no difference; both compare value and type', '=== is only used for numbers and booleans; == is used for comparing strings and objects'],
+          a: 0,
           e: '`0 == "0"` is true (coercion) but `0 === "0"` is false. Prefer `===` to avoid surprising coercion rules. `x == null` is a common exception to check for both null and undefined.',
         },
         {
@@ -47,15 +47,15 @@ Everything else is an **object** (arrays, functions, dates, maps...).
           q: 'What is the output?',
           c: `console.log(1 + '2' + 3);
 console.log(1 + 2 + '3');`,
-          o: ['"123" and "33"', '6 and 6', '"123" and "123"', '"15" and "33"'],
-          a: 0,
+          o: ['"123" and "123"', '"123" and "33"', '6 and 6', '"15" and "33"'],
+          a: 1,
           e: '`+` is evaluated left to right. `1 + "2"` -> "12" (string concatenation) then "123". In the second, `1 + 2` = 3, then `3 + "3"` = "33".',
         },
         {
           t: 'mcq', l: 2,
           q: 'Which values are falsy in JavaScript?',
-          o: ['false, 0, "", null, undefined, NaN (and -0, 0n)', 'false, 0, "0", null', 'false, [], {}, ""', 'Only false and null'],
-          a: 0,
+          o: ['false, [], {}, "", null, NaN', 'false, 0, "", null, undefined, NaN', 'Only false, null and undefined', 'false, 0, "0", null, undefined, []'],
+          a: 1,
           e: 'The falsy values are `false`, `0`, `-0`, `0n`, `""`, `null`, `undefined` and `NaN`. Everything else, including `"0"`, `[]` and `{}`, is truthy.',
         },
         {
@@ -80,22 +80,22 @@ Use \`const\` by default, \`let\` when you need to re-assign, avoid \`var\`.`,
 var a = 5;
 console.log(b);
 let b = 10;`,
-          o: ['undefined, then ReferenceError', '5, then 10', 'ReferenceError immediately', 'undefined, undefined'],
-          a: 0,
+          o: ['ReferenceError immediately', 'undefined, then ReferenceError', '5, then 10', 'undefined, undefined'],
+          a: 1,
           e: '`var a` is hoisted and initialized to `undefined`. `let b` is hoisted but sits in the Temporal Dead Zone, so accessing it before the declaration throws a ReferenceError.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What does NaN === NaN return, and how should you check for NaN?',
-          o: ['true; use ===', 'false; use Number.isNaN(value)', 'false; use typeof value === "NaN"', 'true; use isNaN only'],
-          a: 1,
+          o: ['false; use Number.isNaN(value)', 'true; use isNaN only', 'false; use typeof value === "NaN"', 'true; use ==='],
+          a: 0,
           e: 'NaN is the only value not equal to itself. `Number.isNaN()` is reliable; the global `isNaN()` coerces first (`isNaN("abc")` is true).',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is the output of 0.1 + 0.2 === 0.3?',
-          o: ['true', 'false', 'TypeError', 'undefined'],
-          a: 1,
+          o: ['true', 'undefined', 'false', 'TypeError'],
+          a: 2,
           e: 'Numbers are IEEE-754 doubles; 0.1 + 0.2 = 0.30000000000000004. Compare with a tolerance (`Math.abs(a - b) < Number.EPSILON`) or use integers (cents) for money.',
         },
       ],
@@ -132,8 +132,8 @@ c.get(); // 2  – count is not accessible directly
           c: `for (var i = 0; i < 3; i++) {
   setTimeout(() => console.log(i), 0);
 }`,
-          o: ['0 1 2', '3 3 3', '0 0 0', 'undefined x3'],
-          a: 1,
+          o: ['0 0 0', '0 1 2', 'undefined x3', '3 3 3'],
+          a: 3,
           e: '`var` is function-scoped, so all callbacks share one `i`, which is 3 when they run. Using `let` creates a new binding per iteration and prints 0 1 2.',
         },
         {
@@ -160,15 +160,15 @@ c.get(); // 2  – count is not accessible directly
 };
 const fn = user.greet;
 console.log(fn());`,
-          o: ['"Hi Ali"', '"Hi undefined" (or TypeError in strict mode modules)', '"Hi "', 'ReferenceError'],
-          a: 1,
+          o: ['"Hi Ali" in sloppy mode, and "Hi undefined" in strict mode', '"Hi Ali", because fn still keeps user as its this', 'ReferenceError, because fn is not defined after extraction', '"Hi undefined" in sloppy mode, or a TypeError in strict mode'],
+          a: 3,
           e: 'Extracting the method loses its implicit binding. Called plainly, `this` is undefined in strict mode (TypeError reading name) or window in sloppy mode (window.name is usually ""/undefined). Fix with `user.greet.bind(user)`.',
         },
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between call, apply and bind?',
-          o: ['They are identical', 'call and apply invoke immediately (call takes args individually, apply takes an array); bind returns a new function with bound this', 'bind invokes immediately', 'apply only works with arrow functions'],
-          a: 1,
+          o: ['bind invokes the function immediately, while call and apply return a new bound function', 'apply only works with arrow functions, while call works with regular ones', 'They are identical; the three names exist only for backward compatibility', 'call/apply invoke immediately (args vs array); bind returns a new bound function'],
+          a: 3,
           e: '`fn.call(ctx, a, b)`, `fn.apply(ctx, [a, b])`, `const g = fn.bind(ctx, a); g(b)`.',
         },
         {
@@ -198,8 +198,8 @@ function outer() {
 };
 console.log(obj.regular()());
 console.log(obj.arrow());`,
-          o: ['42 and 42', '42 and undefined', 'undefined and 42', 'undefined and undefined'],
-          a: 1,
+          o: ['undefined and 42', '42 and 42', '42 and undefined', 'undefined and undefined'],
+          a: 2,
           e: 'The arrow inside `regular` captures `this` of `regular`, which is `obj` -> 42. `arrow` is defined in the module/global scope, so its `this` is not `obj` -> undefined.',
         },
         {
@@ -254,21 +254,21 @@ dog.speak(); // 'sound' – found on the prototype
         {
           t: 'mcq', l: 2,
           q: 'What does the "new" keyword do?',
-          o: ['Only allocates memory', 'Creates an empty object, links its prototype to Constructor.prototype, calls the constructor with this = new object, and returns it (unless the constructor returns an object)', 'Copies the constructor function', 'Makes the object immutable'],
-          a: 1,
+          o: ['Copies the constructor function itself so each instance has its own methods', 'Creates a frozen object from the constructor, so its properties cannot be changed after construction', 'Creates an object, links it to Constructor.prototype, runs the constructor with this, returns it', 'Only allocates memory for the object; the constructor must be called separately'],
+          a: 2,
           e: 'These four steps are exactly what `new` performs.',
         },
         {
           t: 'mcq', l: 1,
           q: 'Which creates a shallow copy of an object?',
-          o: ['const b = a', 'const b = { ...a } or Object.assign({}, a)', 'const b = a.copy()', 'const b = JSON.parse(a)'],
-          a: 1,
+          o: ['const b = { ...a }', 'const b = a.copy()', 'const b = a', 'const b = JSON.parse(a)'],
+          a: 0,
           e: 'Spread and Object.assign copy top-level properties; nested objects are still shared. For deep copies use `structuredClone(a)`.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is the best built-in way to deep clone an object containing Dates, Maps and nested objects?',
-          o: ['JSON.parse(JSON.stringify(obj))', 'structuredClone(obj)', '{ ...obj }', 'Object.freeze(obj)'],
+          o: ['Object.freeze(obj)', 'structuredClone(obj)', 'JSON.parse(JSON.stringify(obj))', '{ ...obj }'],
           a: 1,
           e: '`structuredClone` handles Dates, Maps, Sets, typed arrays and circular references. The JSON trick loses Dates (become strings), undefined, functions, Maps and fails on cycles.',
         },
@@ -288,8 +288,8 @@ In strict mode, violating freeze/seal throws a TypeError; otherwise it fails sil
           c: `class A { static create() { return new this(); } hello() { return 'A'; } }
 class B extends A { hello() { return 'B' + super.hello(); } }
 console.log(B.create().hello());`,
-          o: ['"A"', '"B"', '"BA"', 'TypeError'],
-          a: 2,
+          o: ['"BA"', '"B"', '"A"', 'TypeError'],
+          a: 0,
           e: 'Static methods are inherited; inside `B.create()`, `this` is B, so it creates a B. B.hello calls super.hello() -> "BA".',
         },
       ],
@@ -324,8 +324,8 @@ Long synchronous tasks (>50ms) block rendering and input -> janky UI. Use Web Wo
 setTimeout(() => console.log('2'), 0);
 Promise.resolve().then(() => console.log('3'));
 console.log('4');`,
-          o: ['1 2 3 4', '1 4 3 2', '1 4 2 3', '1 3 4 2'],
-          a: 1,
+          o: ['1 4 2 3', '1 3 4 2', '1 4 3 2', '1 2 3 4'],
+          a: 2,
           e: 'Synchronous logs first (1, 4). Then microtasks (promise -> 3). Then the next macrotask (setTimeout -> 2).',
         },
         {
@@ -339,8 +339,8 @@ console.log('4');`,
 console.log('C');
 f();
 console.log('D');`,
-          o: ['C A B D', 'C A D B', 'A C D B', 'C D A B'],
-          a: 1,
+          o: ['A C D B', 'C D A B', 'C A B D', 'C A D B'],
+          a: 3,
           e: 'f runs synchronously until the first `await` (prints A). The rest after await is scheduled as a microtask, so D prints before B.',
         },
         {
@@ -368,15 +368,15 @@ try {
         {
           t: 'mcq', l: 2,
           q: 'Which Promise combinator resolves as soon as ANY promise fulfills, ignoring rejections unless all reject?',
-          o: ['Promise.all', 'Promise.race', 'Promise.any', 'Promise.allSettled'],
-          a: 2,
+          o: ['Promise.all', 'Promise.any', 'Promise.allSettled', 'Promise.race'],
+          a: 1,
           e: '`all`: all must fulfill (fails fast on first reject). `allSettled`: waits for all, never rejects. `race`: first to settle (fulfill or reject). `any`: first to fulfill; rejects with AggregateError if all reject.',
         },
         {
           t: 'mcq', l: 2,
           q: 'You need to call 3 independent APIs. Which is the fastest correct approach?',
-          o: ['await each one sequentially', 'await Promise.all([a(), b(), c()])', 'Use setTimeout for each', 'Use synchronous XHR'],
-          a: 1,
+          o: ['Call each one inside its own setTimeout', 'Use synchronous XHR for each call', 'await each one sequentially', 'await Promise.all([a(), b(), c()])'],
+          a: 3,
           e: 'Sequential awaits take the sum of latencies; Promise.all runs them concurrently, taking about the time of the slowest one.',
         },
         {
@@ -402,7 +402,7 @@ controller.abort(); // cancel
         {
           t: 'mcq', l: 3,
           q: 'Which API runs a callback right before the browser\'s next repaint, ideal for animations?',
-          o: ['setTimeout(fn, 16)', 'requestAnimationFrame(fn)', 'requestIdleCallback(fn)', 'queueMicrotask(fn)'],
+          o: ['requestIdleCallback(fn)', 'requestAnimationFrame(fn)', 'queueMicrotask(fn)', 'setTimeout(fn, 16)'],
           a: 1,
           e: 'rAF syncs with the display refresh rate and pauses in background tabs. requestIdleCallback runs when the browser is idle (low-priority work).',
         },
@@ -438,7 +438,7 @@ list.addEventListener('click', (e) => {
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between event.target and event.currentTarget?',
-          o: ['They are always the same', 'target is the element that triggered the event; currentTarget is the element whose listener is running', 'currentTarget is the deepest element', 'target is always document'],
+          o: ['They are always the same element, regardless of where the listener is', 'target is the element that triggered the event; currentTarget runs the listener', 'currentTarget is the deepest element that was clicked; target is the element with the listener', 'target is always document, and currentTarget is the element that was clicked'],
           a: 1,
           e: 'With delegation, currentTarget is the parent with the listener while target is the clicked child.',
         },
@@ -459,8 +459,8 @@ list.addEventListener('click', (e) => {
         {
           t: 'mcq', l: 2,
           q: 'Which is the most efficient way to add 1000 list items to the DOM?',
-          o: ['Append each li directly to the live list in a loop', 'Build them in a DocumentFragment (or one innerHTML/append call) and insert once', 'Use document.write', 'Use setTimeout per item'],
-          a: 1,
+          o: ['Write each item with document.write in a loop', 'Schedule a setTimeout that appends each item', 'Build them in a DocumentFragment and insert once', 'Append each li directly to the live list in a loop'],
+          a: 2,
           e: 'Inserting once minimizes layout/reflow work. For very long lists, virtualize (render only visible rows).',
         },
         {
@@ -484,15 +484,15 @@ Batch reads then writes, use requestAnimationFrame, animate with transform/opaci
         {
           t: 'mcq', l: 2,
           q: 'Which observer API efficiently detects when an element enters the viewport (e.g. lazy loading, infinite scroll)?',
-          o: ['MutationObserver', 'IntersectionObserver', 'ResizeObserver', 'PerformanceObserver'],
-          a: 1,
+          o: ['IntersectionObserver', 'MutationObserver', 'ResizeObserver', 'PerformanceObserver'],
+          a: 0,
           e: 'IntersectionObserver notifies asynchronously when visibility changes, avoiding expensive scroll listeners with getBoundingClientRect.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What does the "defer" attribute do on a script tag?',
-          o: ['Blocks HTML parsing until the script runs', 'Downloads in parallel and executes after HTML parsing, in document order', 'Executes as soon as downloaded, in any order', 'Prevents the script from running'],
-          a: 1,
+          o: ['Blocks HTML parsing until the script downloads and runs', 'Prevents the script from running until the user first interacts with the page', 'Runs as soon as it is downloaded, in any order', 'Downloads in parallel and runs after parsing, in document order'],
+          a: 3,
           e: '`defer`: parallel download, runs after parsing, keeps order. `async`: parallel download, runs as soon as ready (order not guaranteed) – good for independent scripts like analytics.',
         },
         {
@@ -518,15 +518,15 @@ Batch reads then writes, use requestAnimationFrame, animate with transform/opaci
           c: `const [a, , b = 5] = [1, 2];
 const { x, y: z = 3 } = { x: 10 };
 console.log(a, b, x, z);`,
-          o: ['1 2 10 3', '1 5 10 3', '1 undefined 10 undefined', 'TypeError'],
-          a: 1,
+          o: ['1 5 10 3', '1 undefined 10 undefined', '1 2 10 3', 'TypeError'],
+          a: 0,
           e: 'Array destructuring skips the second item; the third is missing so its default 5 is used. `y` is renamed to `z` with default 3.',
         },
         {
           t: 'mcq', l: 1,
           q: 'Which array method returns a NEW array without modifying the original?',
-          o: ['push', 'splice', 'map', 'sort'],
-          a: 2,
+          o: ['map', 'splice', 'sort', 'push'],
+          a: 0,
           e: '`map`, `filter`, `slice`, `concat` and the newer `toSorted`, `toReversed`, `toSpliced`, `with` return new arrays. `push`, `splice`, `sort`, `reverse` mutate.',
         },
         {
@@ -534,8 +534,8 @@ console.log(a, b, x, z);`,
           q: 'What is the output?',
           c: `console.log([1, 2, 3, 4].reduce((acc, n) => acc + n, 0));
 console.log([10, 1, 5].sort());`,
-          o: ['10 and [1, 5, 10]', '10 and [1, 10, 5]', '24 and [1, 5, 10]', '10 and [10, 5, 1]'],
-          a: 1,
+          o: ['24 and [1, 5, 10]', '10 and [1, 5, 10]', '10 and [1, 10, 5]', '10 and [10, 5, 1]'],
+          a: 2,
           e: 'Default `sort()` compares as strings: "1" < "10" < "5". Use `sort((a, b) => a - b)` for numbers.',
         },
         {
@@ -554,8 +554,8 @@ count ?? 10; // 0  – ?? only checks null/undefined
         {
           t: 'mcq', l: 2,
           q: 'When should you use a Map instead of a plain object?',
-          o: ['Never', 'When keys are not strings (objects as keys), you need insertion order guarantees, frequent add/delete, or easy size', 'Only for numbers', 'When you need JSON serialization'],
-          a: 1,
+          o: ['Never; a plain object can do everything a Map can, with better performance', 'When you need JSON serialization, since JSON.stringify supports Maps natively and keeps entries', 'When keys are not strings, you need insertion order, frequent add/delete, or size', 'Only when every key is a number, since objects convert numbers to strings'],
+          a: 2,
           e: 'Map accepts any key type, has `size`, is iterable in insertion order and is optimized for frequent mutations. WeakMap holds object keys weakly (good for caches/private data).',
         },
         {
@@ -579,8 +579,8 @@ Uses: lazy sequences, infinite streams, custom iteration, async generators (\`fo
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between ES modules (import/export) and CommonJS (require)?',
-          o: ['No difference', 'ESM is static (analyzable, tree-shakable), supports top-level await and async loading; CommonJS is dynamic and synchronous', 'CommonJS works only in browsers', 'ESM cannot export functions'],
-          a: 1,
+          o: ['ESM cannot export functions, only constants and classes', 'CommonJS works only in browsers and ESM works only in Node.js, so bundlers convert between them', 'There is no difference; import is just syntax sugar for require', 'ESM is static and tree-shakable with top-level await; CommonJS is dynamic and synchronous'],
+          a: 3,
           e: 'ES modules are the standard in browsers and modern Node. Static imports enable bundlers to remove unused code (tree shaking).',
         },
       ],

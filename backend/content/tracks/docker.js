@@ -32,8 +32,8 @@ Containers solve "works on my machine", speed up CI/CD and enable microservices 
         {
           t: 'mcq', l: 1,
           q: 'What is the difference between an image and a container?',
-          o: ['They are the same', 'An image is a read-only template; a container is a running (or stopped) instance of an image with a writable layer', 'A container is a stored template', 'Images run processes'],
-          a: 1,
+          o: ['A container is a stored template, and an image is a running instance of it', 'They are the same thing; "container" is just the name used at runtime', 'An image is a read-only template; a container is an instance of it with a writable layer', 'Images run processes directly on the host, while containers only store their file systems and metadata'],
+          a: 2,
           e: 'Like a class (image) and an object (container).',
         },
         {
@@ -56,15 +56,15 @@ Copying the source before \`npm ci\` would reinstall dependencies on every code 
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between CMD and ENTRYPOINT?',
-          o: ['No difference', 'ENTRYPOINT sets the executable that always runs; CMD provides default arguments (or default command) that can be overridden at docker run', 'CMD runs at build time', 'ENTRYPOINT is only for Windows'],
-          a: 1,
+          o: ['There is no difference; both set the command and either can be used', 'CMD runs at build time to prepare the image, while ENTRYPOINT runs each time the container starts', 'ENTRYPOINT sets the executable that always runs; CMD gives default args you can override', 'ENTRYPOINT is only supported for Windows containers, CMD for Linux ones'],
+          a: 2,
           e: 'Use exec form (JSON array) so the process is PID 1 and receives signals like SIGTERM.',
         },
         {
           t: 'mcq', l: 2,
           q: 'COPY vs ADD in a Dockerfile?',
-          o: ['Identical', 'COPY copies local files; ADD can also extract local tar archives and fetch URLs – prefer COPY for clarity', 'ADD is faster', 'COPY can download URLs'],
-          a: 1,
+          o: ['COPY copies local files; ADD can also extract tar archives and fetch URLs', 'ADD is faster because it skips the build cache, so it should be preferred', 'They are identical; ADD is just an older alias kept for compatibility', 'COPY can download files from URLs, while ADD only copies local files'],
+          a: 0,
           e: 'Docker best practice is COPY unless you need ADD\'s tar auto-extraction.',
         },
       ],
@@ -118,14 +118,14 @@ CMD ["node", "dist/main.js"]
         {
           t: 'mcq', l: 2,
           q: 'Why should containers not run as root?',
-          o: ['Root is slower', 'If the app is compromised, root in the container increases the risk of escaping to or damaging the host', 'Root cannot open ports', 'Docker forbids root'],
+          o: ['Docker refuses to start containers whose main process runs as root', 'If the app is compromised, root increases the risk of escaping to or harming the host', 'Root processes inside a container are not allowed to open network ports below 1024 or mount volumes', 'Processes running as root are slower due to extra permission checks'],
           a: 1,
           e: 'Least privilege: use USER, drop capabilities, read-only filesystems where possible.',
         },
         {
           t: 'mcq', l: 1,
           q: 'What is .dockerignore used for?',
-          o: ['Ignoring containers', 'Excluding files from the build context sent to the Docker daemon (smaller, faster, no secrets)', 'Ignoring errors', 'Hiding images'],
+          o: ['Telling Docker to ignore certain containers when running docker ps', 'Excluding files from the build context sent to the daemon (smaller, faster, no secrets)', 'Hiding images from docker images so they are not pushed to the registry', 'Ignoring build errors so the image still gets created when a RUN step fails or a COPY source is missing'],
           a: 1,
           e: 'Exclude node_modules, .git, build outputs, .env, etc.',
         },
@@ -148,15 +148,15 @@ Container filesystems are **ephemeral** – data is lost when the container is r
         {
           t: 'mcq', l: 2,
           q: 'In Docker Compose, how does the api service connect to the postgres service named "db"?',
-          o: ['Using localhost:5432', 'Using the service name as hostname: db:5432 on the shared Compose network', 'Using the host machine IP only', 'Containers cannot talk to each other'],
-          a: 1,
+          o: ['Using localhost:5432, since all Compose services share one network namespace', 'They cannot talk directly; traffic must go through an external proxy', 'Using the host machine\'s IP address and the port published for db', 'Using the service name as hostname: db:5432 on the shared Compose network'],
+          a: 3,
           e: 'Compose creates a user-defined network with built-in DNS; service names resolve to container IPs. localhost inside a container refers to the container itself.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What does depends_on in Docker Compose guarantee by default?',
-          o: ['The dependency is fully ready to accept connections', 'Only start order; use healthchecks with condition: service_healthy to wait for readiness', 'Automatic retries', 'Shared memory'],
-          a: 1,
+          o: ['Only start order; use healthchecks with condition: service_healthy to wait', 'That both services share memory and the same network namespace', 'The dependency is fully ready to accept connections before the service starts', 'That a failed dependency is automatically retried until it succeeds'],
+          a: 0,
           e: 'Your app should also retry connections on startup.',
         },
         {

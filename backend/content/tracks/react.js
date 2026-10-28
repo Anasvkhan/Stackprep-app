@@ -32,15 +32,15 @@ The **Virtual DOM** is a lightweight JS representation of the UI. On every state
         {
           t: 'mcq', l: 1,
           q: 'Why are keys important when rendering lists?',
-          o: ['They style list items', 'They help React identify which items changed, were added or removed, so it can preserve state and update efficiently', 'They are required for accessibility', 'They make lists sortable'],
-          a: 1,
+          o: ['They are required by screen readers to announce each list item', 'They apply unique styles to each list item without extra class names', 'They help React identify which items changed, were added or removed', 'They make lists sortable by letting React reorder items by key'],
+          a: 2,
           e: 'Keys must be stable and unique among siblings (e.g. database ids).',
         },
         {
           t: 'mcq', l: 2,
           q: 'Why is using the array index as a key problematic?',
-          o: ['It is not allowed', 'When items are reordered/inserted/deleted, indexes shift, so React may reuse the wrong component state (e.g. input values attach to the wrong row)', 'Indexes are strings', 'It causes infinite loops'],
-          a: 1,
+          o: ['When items are reordered or inserted, indexes shift and state attaches to the wrong row', 'It causes infinite re-render loops whenever the list changes', 'React does not allow numbers as keys and throws a warning', 'Indexes are converted to strings on every render, which makes reconciling long lists slower'],
+          a: 0,
           e: 'Index keys are fine only for static lists that never reorder.',
         },
         {
@@ -58,8 +58,8 @@ Changing either triggers a re-render. Data flows **down** via props; events flow
         {
           t: 'mcq', l: 2,
           q: 'When does a React component re-render?',
-          o: ['Only when its props change', 'When its state changes, its parent re-renders, or a context it consumes changes', 'Only when forceUpdate is called', 'Every second'],
-          a: 1,
+          o: ['On every animation frame, about 60 times a second, even if nothing changed', 'Only when forceUpdate is called', 'Only when its props change', 'When its state changes, its parent re-renders, or a used context changes'],
+          a: 3,
           e: 'A parent re-render re-renders all children by default, even if their props did not change, unless they are memoized (React.memo).',
         },
         {
@@ -74,8 +74,8 @@ Changing either triggers a re-render. Data flows **down** via props; events flow
   };
   return <button onClick={handle}>{count}</button>;
 }`,
-          o: ['3', '1', '0', '2'],
-          a: 1,
+          o: ['1', '2', '3', '0'],
+          a: 0,
           e: 'All three calls use the same stale `count` (0) from the render closure, so the state becomes 1. Use the updater form `setCount(c => c + 1)` to get 3.',
         },
         {
@@ -99,8 +99,8 @@ const ref = useRef();
         {
           t: 'mcq', l: 1,
           q: 'What is JSX?',
-          o: ['A templating language run by the browser', 'Syntax sugar that compiles to React.createElement / jsx() calls', 'A CSS preprocessor', 'A new JavaScript runtime'],
-          a: 1,
+          o: ['A new JavaScript runtime that replaces Node.js for React', 'A CSS preprocessor for writing styles inside components', 'Syntax sugar that compiles to React.createElement / jsx() calls', 'A templating language that the browser understands and runs natively'],
+          a: 2,
           e: 'Babel/TypeScript/SWC transform JSX into function calls that create React elements (plain objects).',
         },
       ],
@@ -145,22 +145,22 @@ useEffect(() => {
         {
           t: 'mcq', l: 2,
           q: 'What is the difference between useMemo and useCallback?',
-          o: ['They are identical', 'useMemo memoizes a computed value; useCallback memoizes a function reference', 'useCallback memoizes values; useMemo memoizes functions', 'useMemo runs effects'],
-          a: 1,
+          o: ['useMemo memoizes a computed value; useCallback memoizes a function reference', 'They are identical; useCallback is an alias for useMemo', 'useCallback memoizes values; useMemo memoizes function references', 'useMemo runs side effects after render, while useCallback runs them before the render'],
+          a: 0,
           e: 'useCallback(fn, deps) is equivalent to useMemo(() => fn, deps). Both are useful mainly when passing to memoized children or as effect dependencies.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is useRef commonly used for?',
-          o: ['Triggering re-renders', 'Accessing DOM nodes and storing mutable values that persist across renders without causing re-renders', 'Global state', 'Fetching data'],
-          a: 1,
+          o: ['Accessing DOM nodes and keeping mutable values across renders without re-rendering', 'Triggering a re-render whenever the stored value changes', 'Fetching data once on mount and caching the response so later renders can reuse it', 'Sharing global state between components without a context provider'],
+          a: 0,
           e: 'Changing ref.current does not re-render. Good for timers, previous values, DOM focus, and imperative APIs.',
         },
         {
           t: 'mcq', l: 3,
           q: 'What is the difference between useEffect and useLayoutEffect?',
-          o: ['No difference', 'useLayoutEffect runs synchronously after DOM mutations but before the browser paints; useEffect runs after paint', 'useLayoutEffect only runs on the server', 'useEffect blocks painting'],
-          a: 1,
+          o: ['useLayoutEffect only runs on the server during server-side rendering', 'There is no difference; both run after the browser paints', 'useEffect blocks painting until it finishes, while useLayoutEffect runs later in the background', 'useLayoutEffect runs after DOM mutations but before paint; useEffect runs after paint'],
+          a: 3,
           e: 'Use useLayoutEffect for measuring layout and synchronously adjusting the DOM to avoid flicker. It blocks paint, so use sparingly.',
         },
         {
@@ -210,7 +210,7 @@ In real apps prefer **TanStack Query / SWR**: caching, deduping, retries, backgr
         {
           t: 'mcq', l: 3,
           q: 'What is a "stale closure" in React hooks?',
-          o: ['A memory leak in the browser', 'A callback or effect capturing old state/props from a previous render because dependencies were not updated', 'A closed WebSocket', 'A component that never unmounts'],
+          o: ['A memory leak caused by closures inside components that the browser never garbage collects', 'A callback or effect capturing old state/props because dependencies were not updated', 'A WebSocket connection that was closed but is still referenced in state', 'A component that never unmounts because a closure still references it'],
           a: 1,
           e: 'e.g. setInterval inside useEffect with [] always sees the initial state. Fix with correct deps, updater functions, or refs.',
         },
@@ -238,7 +238,7 @@ const theme = useContext(ThemeContext);
         {
           t: 'mcq', l: 2,
           q: 'What are the three core principles of Redux?',
-          o: ['Mutable state, many stores, async reducers', 'Single source of truth, state is read-only (changed via actions), changes made with pure reducers', 'Components own all state', 'Two-way data binding'],
+          o: ['Mutable state, many stores, and async reducers', 'Single source of truth, read-only state, pure reducers', 'Two-way data binding between the store and the UI', 'Components own all of their state and sync it to the store'],
           a: 1,
           e: 'Redux Toolkit is now the recommended way to write Redux (createSlice, Immer-powered "mutating" syntax, RTK Query).',
         },
@@ -255,8 +255,8 @@ Libraries like **TanStack Query, SWR, RTK Query, Apollo** solve server state; pu
         {
           t: 'mcq', l: 3,
           q: 'A Context provider value is an object created inline: value={{ user, setUser }}. What problem does this cause?',
-          o: ['None', 'A new object each render makes all consumers re-render even if user did not change', 'Context stops working', 'It throws an error'],
-          a: 1,
+          o: ['It throws an error, since inline objects are not allowed in JSX props', 'Context stops working, because providers only accept primitive values', 'None; React deep-compares the object\'s contents before deciding to update the consumers', 'A new object each render makes all consumers re-render even if user is unchanged'],
+          a: 3,
           e: 'Wrap it in useMemo(() => ({ user, setUser }), [user]) or split state and dispatch into separate contexts.',
         },
       ],
@@ -290,22 +290,22 @@ Libraries like **TanStack Query, SWR, RTK Query, Apollo** solve server state; pu
         {
           t: 'mcq', l: 2,
           q: 'What does React.memo do?',
-          o: ['Caches API responses', 'Skips re-rendering a component when its props are shallowly equal to the previous props', 'Stores state in localStorage', 'Memoizes hooks'],
+          o: ['Stores component state in localStorage', 'Skips re-rendering when props are shallowly equal', 'Caches API responses made by the component', 'Memoizes all hooks used inside the component across renders'],
           a: 1,
           e: 'Shallow comparison means new object/array/function props break memoization unless they are stable.',
         },
         {
           t: 'mcq', l: 2,
           q: 'Which API marks a state update as non-urgent so typing stays responsive while a big list re-renders?',
-          o: ['useEffect', 'startTransition / useTransition', 'useLayoutEffect', 'flushSync'],
+          o: ['useLayoutEffect with a priority flag', 'startTransition / useTransition', 'flushSync', 'useEffect'],
           a: 1,
           e: 'Concurrent rendering lets React interrupt the transition render to handle urgent updates like keystrokes.',
         },
         {
           t: 'mcq', l: 1,
           q: 'How do you lazy load a component in React?',
-          o: ['import Comp from "./Comp" inside useEffect', 'const Comp = React.lazy(() => import("./Comp")) wrapped in <Suspense fallback>', 'Using require()', 'With setTimeout'],
-          a: 1,
+          o: ['Render it inside a setTimeout so the module loads after the first paint', 'Call import("./Comp") inside useEffect and store it in state', 'Load it with require("./Comp") inside the render function', 'const Comp = React.lazy(() => import("./Comp")) inside <Suspense>'],
+          a: 3,
           e: 'The component code is split into a separate chunk and loaded when first rendered.',
         },
       ],
@@ -330,15 +330,15 @@ Used in Next.js App Router. Benefits: less JS, faster loads, data fetching close
         {
           t: 'mcq', l: 2,
           q: 'What does automatic batching in React 18 mean?',
-          o: ['Requests are batched to the server', 'Multiple state updates in timeouts, promises and native handlers are grouped into a single re-render', 'Components are rendered in batches of 10', 'CSS is batched'],
-          a: 1,
+          o: ['Multiple state updates in timeouts, promises and handlers become one re-render', 'CSS changes from several components are batched into one style recalculation per frame', 'Components are rendered in batches of 10 to keep the UI responsive', 'Network requests made during render are batched to the server'],
+          a: 0,
           e: 'Before React 18 only updates inside React event handlers were batched.',
         },
         {
           t: 'mcq', l: 2,
           q: 'What is an Error Boundary?',
-          o: ['A try/catch inside useEffect', 'A component that catches JavaScript errors in its child tree during rendering and shows a fallback UI', 'A CSS boundary', 'A server middleware'],
-          a: 1,
+          o: ['A CSS boundary that stops styles leaking into child components', 'A try/catch block placed inside useEffect', 'A component that catches render errors in its child tree and shows a fallback', 'A server middleware that catches rendering errors before the page is sent'],
+          a: 2,
           e: 'They are class components (componentDidCatch / getDerivedStateFromError) or via libraries like react-error-boundary. They do not catch errors in event handlers or async code.',
         },
         {
@@ -356,8 +356,8 @@ Used in Next.js App Router. Benefits: less JS, faster loads, data fetching close
         {
           t: 'mcq', l: 2,
           q: 'Which is the recommended library for testing React components from the user\'s perspective?',
-          o: ['Enzyme', 'React Testing Library (with Jest/Vitest)', 'Mocha only', 'Selenium only'],
-          a: 1,
+          o: ['Selenium only', 'Mocha only', 'React Testing Library', 'Enzyme'],
+          a: 2,
           e: 'RTL encourages querying by role/label/text and testing behavior rather than implementation details. Use Playwright/Cypress for E2E.',
         },
         {

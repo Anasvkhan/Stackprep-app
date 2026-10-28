@@ -43,15 +43,15 @@ async def create_user(user: UserIn):
         {
           t: 'mcq', l: 2,
           q: 'When should a FastAPI endpoint be "async def" vs "def"?',
-          o: ['Always async', 'async def when you await async libraries (httpx, asyncpg); plain def for blocking code, which FastAPI runs in a threadpool', 'Always def', 'It makes no difference'],
-          a: 1,
+          o: ['Always plain def, because async def handlers cannot access request dependencies or the database', 'Always async def, because FastAPI runs plain def handlers on the event loop', 'It makes no difference; FastAPI converts both forms into the same coroutine', 'async def when you await async libraries; plain def for blocking code (threadpool)'],
+          a: 3,
           e: 'Calling blocking code (requests, time.sleep, sync DB drivers) inside async def blocks the event loop for all requests.',
         },
         {
           t: 'mcq', l: 1,
           q: 'What does Pydantic do in FastAPI?',
-          o: ['Database migrations', 'Validates and parses request data and serializes responses based on type-annotated models', 'Handles routing', 'Runs the server'],
-          a: 1,
+          o: ['Validates and parses request data and serializes responses from typed models', 'Handles routing by matching URL paths to model classes automatically', 'Generates and runs database migrations from the declared model classes on application startup', 'Runs the ASGI server and manages worker processes for the application'],
+          a: 0,
           e: 'Invalid input automatically returns 422 with detailed field errors.',
         },
         {
@@ -86,14 +86,14 @@ Used for DB sessions, auth, pagination params and settings. Override dependencie
         {
           t: 'mcq', l: 2,
           q: 'What are FastAPI BackgroundTasks suitable for?',
-          o: ['Hours-long video encoding', 'Small fire-and-forget work after the response (send an email, write a log); use Celery/ARQ for heavy or durable jobs', 'Database migrations', 'Load balancing'],
-          a: 1,
+          o: ['Distributing incoming requests across workers, like a built-in load balancer', 'Running database migrations in the background while the app keeps serving requests on the old schema', 'Small fire-and-forget work after the response (email, log); use Celery for heavy jobs', 'Hours-long jobs like video encoding that must survive server restarts'],
+          a: 2,
           e: 'BackgroundTasks run in the same process; if it crashes, the task is lost.',
         },
         {
           t: 'mcq', l: 2,
           q: 'How do you test FastAPI endpoints?',
-          o: ['Only manually through /docs', 'With TestClient (or httpx.AsyncClient) and pytest, overriding dependencies such as the DB', 'Using Selenium', 'It is not testable'],
+          o: ['It is not testable without deploying the app and calling the live URL', 'With TestClient (or httpx.AsyncClient) and pytest, overriding dependencies like the DB', 'Using Selenium to drive the Swagger UI in a real browser and check each of the JSON responses', 'Only manually, by sending requests through the interactive /docs page'],
           a: 1,
           e: 'client = TestClient(app); assert client.get("/health").status_code == 200.',
         },
@@ -112,8 +112,8 @@ Used for DB sessions, auth, pagination params and settings. Override dependencie
         {
           t: 'mcq', l: 2,
           q: 'Which protocol does FastAPI use, enabling WebSockets and async?',
-          o: ['WSGI', 'ASGI', 'CGI', 'FTP'],
-          a: 1,
+          o: ['ASGI', 'WSGI', 'FTP', 'CGI'],
+          a: 0,
           e: 'ASGI is the async successor of WSGI.',
         },
       ],

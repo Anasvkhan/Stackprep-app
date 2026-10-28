@@ -25,8 +25,8 @@ COMMIT;   -- or ROLLBACK on error
       {
         t: 'mcq', l: 1,
         q: 'Which ACID property guarantees that committed data survives a power failure?',
-        o: ['Atomicity', 'Consistency', 'Isolation', 'Durability'],
-        a: 3,
+        o: ['Durability', 'Atomicity', 'Isolation', 'Consistency'],
+        a: 0,
         e: 'Durability is typically implemented with a Write-Ahead Log (WAL / redo log) that is fsynced to disk before commit is acknowledged.',
       },
       {
@@ -59,15 +59,15 @@ Higher isolation = more correctness but more locking/aborts and lower concurrenc
       {
         t: 'mcq', l: 2,
         q: 'What is the default transaction isolation level in PostgreSQL?',
-        o: ['Read Uncommitted', 'Read Committed', 'Repeatable Read', 'Serializable'],
-        a: 1,
+        o: ['Serializable', 'Read Uncommitted', 'Read Committed', 'Repeatable Read'],
+        a: 2,
         e: 'PostgreSQL defaults to Read Committed (each statement sees a snapshot as of its start). MySQL InnoDB defaults to Repeatable Read.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which isolation level prevents ALL anomalies including write skew?',
-        o: ['Read Committed', 'Repeatable Read', 'Snapshot Isolation', 'Serializable'],
-        a: 3,
+        o: ['Read Committed', 'Repeatable Read', 'Serializable', 'Snapshot Isolation'],
+        a: 2,
         e: 'Serializable makes concurrent transactions behave as if executed one at a time (via strict 2PL or Serializable Snapshot Isolation in Postgres), at the cost of more aborts/locking.',
       },
       {
@@ -95,8 +95,8 @@ WHERE id = 1 AND version = 5;      -- 0 rows updated => someone changed it, retr
       {
         t: 'mcq', l: 2,
         q: 'Two users edit the same wiki page; conflicts are rare. Which approach fits best?',
-        o: ['Pessimistic locking with SELECT ... FOR UPDATE held while the user edits', 'Optimistic locking with a version number check on save', 'No concurrency control', 'Serializable isolation for all queries'],
-        a: 1,
+        o: ['Optimistic locking with a version number check on save', 'Serializable isolation for all queries', 'Pessimistic locking with SELECT ... FOR UPDATE held while the user edits', 'No concurrency control'],
+        a: 0,
         e: 'Holding DB locks during human think-time is terrible. Optimistic locking detects conflicting saves via the version column and asks the user to merge/retry.',
       },
       {
@@ -153,7 +153,7 @@ Combine with the **Outbox pattern** to atomically save state + publish events.`,
       {
         t: 'mcq', l: 3,
         q: 'In a Saga, what is a compensating transaction?',
-        o: ['A transaction that retries forever', 'A transaction that semantically undoes the effect of a previous successful step (e.g. refund a payment)', 'A database rollback across services', 'A lock held by the coordinator'],
+        o: ['A transaction that keeps retrying the failed step until it succeeds', 'A transaction that semantically undoes a previous successful step (e.g. a refund)', 'A lock held by the coordinator until every step has committed', 'A distributed rollback that reverts every service\'s database to the state before the saga began'],
         a: 1,
         e: 'Since committed local transactions cannot be rolled back across services, sagas undo them by executing compensating actions like refunds or releasing reservations.',
       },
@@ -237,8 +237,8 @@ WHERE flight_id = 9 AND seat_no = '12A' AND status = 'AVAILABLE';
       {
         t: 'mcq', l: 1,
         q: 'In a primary-replica setup, where should write operations go?',
-        o: ['Any replica', 'The primary only', 'The replica with lowest load', 'All replicas in parallel by the app'],
-        a: 1,
+        o: ['Any replica', 'The replica with lowest load', 'All replicas in parallel by the app', 'The primary only'],
+        a: 3,
         e: 'In single-leader replication, only the primary accepts writes; replicas apply the primary\'s change log.',
       },
       {
@@ -259,7 +259,7 @@ WHERE flight_id = 9 AND seat_no = '12A' AND status = 'AVAILABLE';
       {
         t: 'mcq', l: 2,
         q: 'A user updates their profile and immediately refreshes, but sees the OLD data. The app reads from replicas. What is happening?',
-        o: ['Cache penetration', 'Replication lag breaking read-your-writes consistency', 'A deadlock', 'Database sharding'],
+        o: ['Sharding sending reads to the wrong shard', 'Replication lag breaking read-your-writes', 'A deadlock between two profile updates', 'Cache penetration on the profile endpoint'],
         a: 1,
         e: 'Asynchronous replicas may lag behind the primary. Fixes: read from the primary for a short time after a user\'s write, track the user\'s last write LSN/timestamp and only use replicas that caught up, or sticky routing.',
       },
@@ -293,8 +293,8 @@ WHERE flight_id = 9 AND seat_no = '12A' AND status = 'AVAILABLE';
       {
         t: 'mcq', l: 2,
         q: 'What is "federation" in database scaling?',
-        o: ['Splitting databases by function/domain (users DB, products DB, orders DB)', 'Replicating one DB to many regions', 'Encrypting the database', 'Merging all databases into one'],
-        a: 0,
+        o: ['Merging all databases into one shared cluster', 'Splitting databases by function/domain (users DB, orders DB)', 'Replicating one database to many regions so users get low read latency', 'Encrypting the database and federating the keys'],
+        a: 1,
         e: 'Federation (functional partitioning) gives each domain its own database, reducing load per DB. The cost is no cross-DB joins and transactions.',
       },
       {
@@ -391,8 +391,8 @@ users with id hash % 4 == 1 -> Shard 1
       {
         t: 'mcq', l: 2,
         q: 'What is the biggest problem with "shard = hash(key) % N" when you add a new shard?',
-        o: ['Hash functions become slower', 'Almost all keys map to a different shard, requiring massive data movement', 'Keys can no longer be hashed', 'Only reads are affected'],
-        a: 1,
+        o: ['Keys can no longer be hashed once N changes, so lookups fail', 'Hash functions become slower as the number of shards grows', 'Only reads are affected, because new writes always go to the newest shard until it fills up', 'Almost all keys map to a different shard, requiring massive data movement'],
+        a: 3,
         e: 'Changing N changes the modulo result for most keys (~(N)/(N+1) of them). Consistent hashing or a fixed large number of virtual partitions (e.g. 1024 slots) minimizes movement.',
       },
       {
@@ -415,8 +415,8 @@ A good shard key has:
       {
         t: 'mcq', l: 2,
         q: 'Which shard key is the WORST choice for a large users table?',
-        o: ['user_id (hashed)', 'email (hashed)', 'country', 'tenant_id for a multi-tenant SaaS with many similar tenants'],
-        a: 2,
+        o: ['country', 'email (hashed)', 'user_id (hashed)', 'tenant_id for a multi-tenant SaaS with many similar tenants'],
+        a: 0,
         e: 'Country has low cardinality and skewed distribution (a few countries hold most users), creating huge hot shards.',
       },
       {
@@ -435,7 +435,7 @@ A good shard key has:
       {
         t: 'mcq', l: 3,
         q: 'A celebrity user has 100M followers and their shard is overloaded. What is a common fix?',
-        o: ['Delete the celebrity', 'Further split the hot key (e.g. append a suffix to spread it over multiple shards) and cache heavily', 'Switch to range sharding', 'Add an index'],
+        o: ['Delete the celebrity\'s old posts and followers to shrink the overloaded shard', 'Split the hot key (e.g. suffixes across shards) and cache heavily', 'Switch the whole system to range-based sharding', 'Add an index on follower_id in the overloaded shard'],
         a: 1,
         e: 'Hot keys are handled by key splitting/salting (celebrity_id#1..#N), dedicated shards, read replicas and caching. Twitter-like systems also treat celebrities differently in fan-out.',
       },
@@ -454,8 +454,8 @@ Tools: Vitess (MySQL), Citus (Postgres), MongoDB balancer (chunk migration), Dyn
       {
         t: 'mcq', l: 2,
         q: 'Sharding vs replication: which statement is correct?',
-        o: ['Sharding copies the same data to all nodes; replication splits data', 'Sharding splits data across nodes for scale; replication copies data for availability and read scaling', 'They are the same', 'Replication is only used with NoSQL'],
-        a: 1,
+        o: ['Replication is only used with NoSQL, while sharding is only used with SQL', 'Sharding copies the same data to all nodes; replication splits the data into parts across nodes', 'They are the same technique; the names depend on the database vendor', 'Sharding splits data across nodes for scale; replication copies it for availability'],
+        a: 3,
         e: 'They are complementary: production systems shard data and replicate each shard (e.g. each MongoDB shard is a replica set).',
       },
       {
@@ -504,7 +504,7 @@ Tools: Vitess (MySQL), Citus (Postgres), MongoDB balancer (chunk migration), Dyn
       {
         t: 'mcq', l: 2,
         q: 'In consistent hashing with N servers, roughly what fraction of keys must move when one server is added?',
-        o: ['All keys', 'About 1/N of the keys', 'About half of the keys', 'None'],
+        o: ['None', 'About 1/N of the keys', 'All keys', 'About half of the keys'],
         a: 1,
         e: 'Only the keys falling between the new server and its predecessor move, which on average is about 1/(N+1) ≈ 1/N of the keys.',
       },
@@ -527,8 +527,8 @@ Cassandra used 256 vnodes per node by default (now fewer with better token alloc
       {
         t: 'mcq', l: 2,
         q: 'What is the main purpose of virtual nodes in a consistent hash ring?',
-        o: ['Encrypt keys', 'Distribute load more evenly and spread a failed node\'s keys across many nodes', 'Reduce memory used by keys', 'Replace replication'],
-        a: 1,
+        o: ['Replacing replication entirely, since each key already lives on many vnodes', 'Reducing the memory each node uses to store its keys', 'Spreading load evenly and a failed node\'s keys over many nodes', 'Encrypting keys before they are placed on the ring'],
+        a: 2,
         e: 'Multiple positions per physical node smooth out uneven segments and avoid overloading a single neighbor on failure.',
       },
       {
@@ -544,8 +544,8 @@ Cassandra used 256 vnodes per node by default (now fewer with better token alloc
       {
         t: 'mcq', l: 3,
         q: 'Which alternative to ring-based consistent hashing gives minimal disruption and perfect balance without a ring, by picking the server with the highest hash(key, server) score?',
-        o: ['Modulo hashing', 'Rendezvous (Highest Random Weight) hashing', 'Round robin', 'Linear probing'],
-        a: 1,
+        o: ['Weighted round robin with sticky keys', 'Modulo hashing', 'Rendezvous (Highest Random Weight) hashing', 'Linear probing'],
+        a: 2,
         e: 'Rendezvous hashing computes a score for every server and picks the max. When a server leaves, only its keys move. Jump consistent hash is another lightweight alternative.',
       },
       {
@@ -587,15 +587,15 @@ When there is no partition, a system can be both consistent and available.`,
       {
         t: 'mcq', l: 1,
         q: 'According to CAP, during a network partition a distributed system must choose between:',
-        o: ['Consistency and Partition tolerance', 'Availability and Partition tolerance', 'Consistency and Availability', 'Latency and Throughput'],
-        a: 2,
+        o: ['Availability and Partition tolerance', 'Consistency and Partition tolerance', 'Latency and Throughput', 'Consistency and Availability'],
+        a: 3,
         e: 'Partition tolerance is required for any distributed system, so during a partition the trade-off is Consistency vs Availability.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which system is typically classified as AP?',
-        o: ['ZooKeeper', 'etcd', 'Cassandra (with low consistency levels)', 'A single-node PostgreSQL'],
-        a: 2,
+        o: ['Cassandra (at low consistency levels)', 'ZooKeeper', 'etcd', 'A single-node PostgreSQL with streaming backups'],
+        a: 0,
         e: 'Cassandra prioritizes availability with tunable consistency (ONE, QUORUM, ALL). ZooKeeper and etcd are CP (they use quorum consensus and reject writes without a majority).',
       },
       {
@@ -631,15 +631,15 @@ Stronger models = easier to program, but more coordination, latency and less ava
       {
         t: 'mcq', l: 2,
         q: 'A social media "like" counter shows 1,203 likes to one user and 1,205 to another for a few seconds. What consistency is acceptable here?',
-        o: ['Strong consistency is mandatory', 'Eventual consistency is acceptable', 'Serializable transactions are required', 'Two-phase commit is required'],
-        a: 1,
+        o: ['Eventual consistency is acceptable', 'Strong consistency is mandatory', 'Two-phase commit is required', 'Serializable transactions are required'],
+        a: 0,
         e: 'Small, temporary inconsistencies in like counts are harmless; eventual consistency allows higher availability and lower latency.',
       },
       {
         t: 'mcq', l: 2,
         q: 'With N=3 replicas, which quorum configuration guarantees that a read sees the latest write?',
-        o: ['W=1, R=1', 'W=2, R=2', 'W=1, R=2', 'W=0, R=3'],
-        a: 1,
+        o: ['W=1, R=2', 'W=1, R=1', 'W=2, R=2', 'W=0, R=3'],
+        a: 2,
         e: 'Strong read guarantee requires R + W > N, so read and write sets overlap. W=2, R=2 gives 4 > 3.',
       },
       {

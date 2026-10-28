@@ -45,8 +45,8 @@ Always clarify both at the start of a design interview; NFRs drive the architect
       {
         t: 'mcq', l: 1,
         q: 'Which of these is a NON-functional requirement?',
-        o: ['Users can upload a profile picture', 'The system should respond within 200 ms for 99% of requests', 'Users can reset their password', 'Admins can ban users'],
-        a: 1,
+        o: ['Users can reset their password through a link sent by email', 'Admins can ban users who break the community guidelines', 'The system should respond within 200 ms for 99% of requests', 'Users can upload a profile picture from their phone or computer'],
+        a: 2,
         e: 'Latency targets are a quality attribute of the system (non-functional). The others describe features (functional).',
       },
       {
@@ -81,8 +81,8 @@ Always clarify both at the start of a design interview; NFRs drive the architect
       {
         t: 'mcq', l: 1,
         q: 'Why should application servers be stateless in a horizontally scaled system?',
-        o: ['Stateless servers use less CPU', 'Any request can go to any server, so servers can be added/removed freely', 'Stateless servers do not need a database', 'It makes the code shorter'],
-        a: 1,
+        o: ['It makes the code shorter, since there is no session handling at all', 'Stateless servers use much less CPU and memory per request', 'Stateless servers do not need a database or cache, so there is much less infrastructure to manage', 'Any request can go to any server, so servers can be added or removed freely'],
+        a: 3,
         e: 'When session/state is stored externally (Redis, DB, JWT), the load balancer can route any request to any instance, enabling auto scaling and painless failover.',
       },
       {
@@ -107,8 +107,8 @@ Most real systems use both: big DB servers (vertical) + many app servers (horizo
       {
         t: 'mcq', l: 2,
         q: 'A service has 99.9% availability. Approximately how much downtime is allowed per year?',
-        o: ['52.6 minutes', '8.76 hours', '3.65 days', '5.26 minutes'],
-        a: 1,
+        o: ['3.65 days', '5.26 minutes', '8.76 hours', '52.6 minutes'],
+        a: 2,
         e: `99.9% ("three nines") = 0.1% of 365 days ≈ **8.76 hours/year** (~43.8 min/month).
 - 99% ≈ 3.65 days
 - 99.99% ≈ 52.6 minutes
@@ -117,8 +117,8 @@ Most real systems use both: big DB servers (vertical) + many app servers (horizo
       {
         t: 'mcq', l: 2,
         q: 'Two components each with 99.9% availability are called in SERIES (both are required). What is the overall availability?',
-        o: ['99.9%', '99.99%', '≈ 99.8%', '≈ 99.95%'],
-        a: 2,
+        o: ['99.9%', '99.99%', '≈ 99.95%', '≈ 99.8%'],
+        a: 3,
         e: 'Series availability = A1 × A2 = 0.999 × 0.999 ≈ 0.998 (99.8%). Dependencies in series reduce availability. In PARALLEL (redundant), availability = 1 - (1-A1)(1-A2) = 99.9999%.',
       },
       {
@@ -164,8 +164,8 @@ Handy numbers: 1 day ≈ 86,400 s ≈ 10^5 s; 1M req/day ≈ 12 req/s.`,
       {
         t: 'mcq', l: 2,
         q: 'Which operation is the FASTEST?',
-        o: ['Reading 1 MB sequentially from SSD', 'A round trip within the same data center', 'Main memory (RAM) reference', 'Disk seek on HDD'],
-        a: 2,
+        o: ['Reading 1 MB sequentially from SSD', 'Main memory (RAM) reference', 'Disk seek on HDD', 'A round trip within the same data center'],
+        a: 1,
         e: `Latency numbers every engineer should know (approx):
 - L1 cache: 0.5 ns, RAM reference: ~100 ns
 - Round trip in same data center: ~0.5 ms
@@ -271,21 +271,21 @@ Move DB to its own server so web and data tiers scale independently.
       {
         t: 'mcq', l: 1,
         q: 'What is usually the FIRST step when a single-server app starts struggling?',
-        o: ['Shard the database', 'Move the database to a separate server', 'Rewrite into microservices', 'Use multiple regions'],
-        a: 1,
+        o: ['Move the database to a separate server', 'Shard the database across several machines', 'Deploy the app to multiple regions', 'Rewrite the app into microservices'],
+        a: 0,
         e: 'Separating the web tier from the data tier is the simplest first step; it lets each be scaled and tuned independently. Sharding and microservices come much later.',
       },
       {
         t: 'mcq', l: 1,
         q: 'Where should user session data be stored so that any web server can handle any request?',
-        o: ['In the memory of each web server', 'In a shared store like Redis or in a signed token (JWT)', 'In the load balancer logs', 'In local files on each server'],
-        a: 1,
+        o: ['In a shared store like Redis or in a signed token (JWT)', 'In the load balancer logs, which every server can read', 'In local files on each server, synced every few minutes', 'In the memory of each web server, with sticky sessions'],
+        a: 0,
         e: 'Externalizing session state (Redis/DB) or making it self-contained (JWT) keeps web servers stateless so they can be scaled horizontally.',
       },
       {
         t: 'mcq', l: 2,
         q: 'An app is 90% reads and 10% writes and the database CPU is maxed out. What is the most effective first fix?',
-        o: ['Shard the database by user id', 'Add read replicas and a cache layer', 'Switch to a NoSQL database', 'Increase web servers'],
+        o: ['Add more web servers behind the load balancer', 'Add read replicas and a cache layer', 'Shard the database by user id', 'Switch to a NoSQL database'],
         a: 1,
         e: 'For read-heavy workloads, caching hot data and routing reads to replicas removes most load from the primary. Sharding is mainly needed when WRITES or data size exceed a single node.',
       },
@@ -328,8 +328,8 @@ Move DB to its own server so web and data tiers scale independently.
       {
         t: 'mcq', l: 2,
         q: 'Which technique routes users to the geographically closest data center?',
-        o: ['Round robin load balancing', 'GeoDNS / latency-based DNS routing', 'Database sharding', 'Sticky sessions'],
-        a: 1,
+        o: ['GeoDNS / latency-based DNS routing', 'Round robin load balancing', 'Database sharding by the user\'s country', 'Sticky sessions per region'],
+        a: 0,
         e: 'GeoDNS (or latency-based routing like AWS Route 53) resolves the domain to the IP of the nearest/fastest region.',
       },
       {

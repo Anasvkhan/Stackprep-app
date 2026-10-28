@@ -46,8 +46,8 @@ Examples: Nginx, HAProxy, Envoy, AWS ALB/NLB, GCP Load Balancing, F5 (hardware).
       {
         t: 'mcq', l: 1,
         q: 'Which load balancer can route /api/* to one group of servers and /images/* to another?',
-        o: ['Layer 4 load balancer', 'Layer 7 load balancer', 'DNS round robin', 'Hardware switch'],
-        a: 1,
+        o: ['Hardware switch', 'DNS round robin', 'Layer 4 load balancer', 'Layer 7 load balancer'],
+        a: 3,
         e: 'Path based routing requires reading the HTTP request, which only a Layer 7 (application layer) load balancer does. L4 only sees IP/port.',
       },
       {
@@ -73,8 +73,8 @@ Examples: Nginx, HAProxy, Envoy, AWS ALB/NLB, GCP Load Balancing, F5 (hardware).
       {
         t: 'mcq', l: 2,
         q: 'You serve WebSocket connections that last for hours. Which algorithm balances load best?',
-        o: ['Round robin', 'Least connections', 'Random', 'IP hash only'],
-        a: 1,
+        o: ['Least connections', 'Round robin', 'Random', 'IP hash only'],
+        a: 0,
         e: 'Long-lived connections make round robin uneven over time. Least connections sends new connections to the server currently handling the fewest.',
       },
       {
@@ -108,15 +108,15 @@ Health checks decide whether a backend should receive traffic.
       {
         t: 'mcq', l: 2,
         q: 'What does "TLS termination at the load balancer" mean?',
-        o: ['The LB blocks all HTTPS traffic', 'The LB decrypts HTTPS and forwards traffic to backends (often plain HTTP inside the private network)', 'TLS certificates are stored on every backend only', 'The LB downgrades clients to HTTP'],
-        a: 1,
+        o: ['The LB blocks all HTTPS traffic and only accepts plain HTTP from clients', 'TLS certificates are stored only on the backends, and the LB never sees them', 'The LB downgrades clients to HTTP so backends do less encryption work', 'The LB decrypts HTTPS and forwards traffic to backends, often as plain HTTP'],
+        a: 3,
         e: 'The LB holds the certificate, handles the TLS handshake and decryption (CPU heavy), and backends receive decrypted traffic. For zero-trust, re-encrypt to backends (TLS passthrough or end-to-end TLS).',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which AWS load balancer works at Layer 4 and supports millions of requests per second with static IPs?',
-        o: ['Application Load Balancer (ALB)', 'Network Load Balancer (NLB)', 'Classic Load Balancer', 'CloudFront'],
-        a: 1,
+        o: ['Classic Load Balancer', 'CloudFront', 'Network Load Balancer (NLB)', 'Application Load Balancer (ALB)'],
+        a: 2,
         e: 'NLB operates at Layer 4 (TCP/UDP/TLS), offers ultra low latency, static/Elastic IPs per AZ, and very high throughput. ALB is Layer 7 (HTTP/HTTPS, path/host routing).',
       },
       {
@@ -132,7 +132,7 @@ Health checks decide whether a backend should receive traffic.
       {
         t: 'mcq', l: 3,
         q: 'What is the main problem with plain DNS round robin as a load balancing strategy?',
-        o: ['It cannot work with IPv6', 'Clients/resolvers cache DNS records, so a dead server keeps receiving traffic until TTL expires and there is no health awareness', 'It only works with UDP', 'It requires sticky sessions'],
+        o: ['It cannot work with IPv6 addresses, only with IPv4 A records', 'Resolvers cache records, so a dead server keeps getting traffic until TTL expires', 'It only works over UDP, so clients behind TCP-only networks fail', 'It requires sticky sessions so each client always reaches the same server, which DNS cannot do'],
         a: 1,
         e: 'DNS has no health checking by default and responses are cached (TTL, client caches). Failures propagate slowly and load is uneven. Health-checked DNS with low TTL helps but is still coarse.',
       },
@@ -207,15 +207,15 @@ Examples: Nginx, HAProxy, Envoy, Traefik, Cloudflare.`,
       {
         t: 'mcq', l: 1,
         q: 'Which statement correctly differentiates a forward proxy and a reverse proxy?',
-        o: ['Forward proxy protects servers; reverse proxy protects clients', 'Forward proxy acts on behalf of clients; reverse proxy acts on behalf of servers', 'Both are the same thing', 'Reverse proxy only works over UDP'],
+        o: ['Both are the same thing; only the configuration file differs', 'Forward proxy acts for clients; reverse proxy acts for servers', 'A reverse proxy only works over UDP, a forward proxy over TCP', 'Forward proxy protects servers; reverse proxy protects clients'],
         a: 1,
         e: 'Forward proxy = client side (hides/controls clients). Reverse proxy = server side (hides/protects/balances servers).',
       },
       {
         t: 'mcq', l: 2,
         q: 'Is every load balancer a reverse proxy?',
-        o: ['Yes, always', 'An L7 load balancer is a type of reverse proxy, but a reverse proxy can be used with just one backend (no balancing)', 'No, they are unrelated', 'Only hardware LBs are reverse proxies'],
-        a: 1,
+        o: ['Only hardware load balancers are reverse proxies; software ones like Nginx or HAProxy are not', 'No, they are unrelated; a reverse proxy never distributes any traffic', 'An L7 LB is a reverse proxy, but a reverse proxy can front just one backend', 'Yes, always; every load balancer and reverse proxy are the same thing'],
+        a: 2,
         e: 'An L7 LB is a reverse proxy that distributes load. A reverse proxy is still useful with a single server for TLS, caching, compression and security.',
       },
       {
@@ -234,8 +234,8 @@ They overlap: Nginx can be all three. Think of it as increasing "API awareness":
       {
         t: 'mcq', l: 2,
         q: 'Why does Nginx in front of a Node.js app improve performance with slow mobile clients?',
-        o: ['Nginx runs JavaScript faster', 'Nginx buffers slow client uploads/downloads so the app server is freed quickly', 'Nginx converts HTTP to UDP', 'Nginx disables TLS'],
-        a: 1,
+        o: ['Nginx runs JavaScript faster than Node.js does', 'Nginx disables TLS for mobile clients so the handshake is shorter', 'Nginx buffers slow clients so the app server is freed quickly', 'Nginx converts HTTP to UDP for mobile networks'],
+        a: 2,
         e: 'Request/response buffering: Nginx absorbs slow connections (event-driven, cheap per connection) and talks to the app over a fast local connection, so app workers are not held up.',
       },
       {
@@ -271,8 +271,8 @@ Benefits: same origin (no CORS), TLS in one place, static files served efficient
       {
         t: 'mcq', l: 2,
         q: 'Which header is commonly added by a reverse proxy to pass the original client IP to the backend?',
-        o: ['X-Real-Host', 'X-Forwarded-For', 'Origin-IP', 'Client-Address'],
-        a: 1,
+        o: ['X-Forwarded-For', 'X-Real-Host', 'Client-Address', 'Origin-IP'],
+        a: 0,
         e: 'X-Forwarded-For (and X-Real-IP) carry the original client IP; X-Forwarded-Proto carries the original scheme. Backends must only trust these from known proxies.',
       },
       {
@@ -323,7 +323,7 @@ Without it, clients would need to know every service address and each service wo
       {
         t: 'mcq', l: 1,
         q: 'Which is NOT a typical responsibility of an API gateway?',
-        o: ['Authentication', 'Rate limiting', 'Running complex business logic like calculating order discounts', 'Request routing'],
+        o: ['Authenticating requests and validating access tokens', 'Rate limiting clients by API key or IP', 'Running business logic like calculating order discounts', 'Routing requests to the right backend service'],
         a: 2,
         e: 'Gateways handle cross-cutting concerns. Putting business logic in the gateway couples it to services and makes it a bottleneck ("smart endpoints, dumb pipes").',
       },
@@ -348,15 +348,15 @@ Web app    -> Web BFF ----/
       {
         t: 'mcq', l: 2,
         q: 'What is the biggest risk of an API gateway?',
-        o: ['It makes the system too secure', 'It can become a single point of failure and a performance bottleneck', 'It removes the need for load balancers', 'It cannot handle HTTPS'],
+        o: ['It makes the system too secure for clients to call it directly', 'It can become a single point of failure and a performance bottleneck', 'It cannot handle HTTPS, so traffic must be encrypted elsewhere', 'It removes the need for load balancers, which reduces redundancy across the whole system'],
         a: 1,
         e: 'All traffic flows through it, so it must be highly available (multiple instances behind an LB), horizontally scalable and kept thin.',
       },
       {
         t: 'mcq', l: 2,
         q: 'A mobile screen needs data from User, Orders and Recommendations services. Which gateway feature reduces round trips?',
-        o: ['Request aggregation / composition', 'Sticky sessions', 'TLS passthrough', 'DNS caching'],
-        a: 0,
+        o: ['DNS caching on the gateway', 'Request aggregation / composition', 'TLS passthrough to each service', 'Sticky sessions per mobile client'],
+        a: 1,
         e: 'The gateway (or BFF) calls the 3 services in parallel and returns one combined response, saving the mobile client multiple slow network round trips.',
       },
       {
@@ -419,8 +419,8 @@ Then: TCP handshake (+ TLS handshake) -> HTTP request -> server response -> brow
       {
         t: 'mcq', l: 1,
         q: 'Which DNS record maps a domain name to an IPv4 address?',
-        o: ['CNAME', 'MX', 'A', 'TXT'],
-        a: 2,
+        o: ['TXT', 'MX', 'CNAME', 'A'],
+        a: 3,
         e: `- **A:** name -> IPv4
 - **AAAA:** name -> IPv6
 - **CNAME:** alias name -> another name
@@ -432,15 +432,15 @@ Then: TCP handshake (+ TLS handshake) -> HTTP request -> server response -> brow
       {
         t: 'mcq', l: 1,
         q: 'What does the TTL value on a DNS record control?',
-        o: ['The maximum size of the record', 'How long resolvers may cache the record', 'How many servers can use the record', 'The encryption level'],
-        a: 1,
+        o: ['The encryption level', 'How many servers are allowed to use the record', 'How long resolvers may cache the record', 'The maximum size of the record'],
+        a: 2,
         e: 'TTL (in seconds) = how long the answer can be cached. Low TTL allows fast changes/failover but more DNS queries; high TTL improves performance but changes propagate slowly.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Why can\'t you put a CNAME record on the root/apex domain (example.com) in standard DNS?',
-        o: ['Because CNAMEs are only for email', 'A CNAME cannot coexist with other records, and the apex must have SOA and NS records', 'Because root domains only support IPv6', 'It is allowed everywhere'],
-        a: 1,
+        o: ['A CNAME cannot coexist with other records, and the apex needs SOA and NS', 'Root domains only support IPv6 AAAA records, not aliases', 'It is allowed everywhere; the restriction only applies to subdomains like www', 'CNAME records are only allowed for mail servers and MX lookups'],
+        a: 0,
         e: 'A CNAME must be the only record for a name, but the zone apex needs SOA/NS records. Providers offer ALIAS/ANAME or "CNAME flattening" (e.g. Route 53 Alias) to work around this.',
       },
       {
@@ -458,7 +458,7 @@ Then: TCP handshake (+ TLS handshake) -> HTTP request -> server response -> brow
       {
         t: 'mcq', l: 2,
         q: 'Which transport protocol does DNS primarily use for normal queries?',
-        o: ['TCP only', 'UDP on port 53 (falls back to TCP for large responses / zone transfers)', 'HTTP on port 80', 'ICMP'],
+        o: ['TCP on port 53 only', 'UDP on port 53', 'ICMP echo packets', 'HTTP on port 80'],
         a: 1,
         e: 'DNS uses UDP port 53 for speed; TCP 53 is used when responses exceed size limits and for zone transfers. Modern privacy options: DNS over HTTPS (DoH) and DNS over TLS (DoT).',
       },
@@ -516,8 +516,8 @@ Examples: Cloudflare, Akamai, AWS CloudFront, Fastly, Google Cloud CDN.`,
       {
         t: 'mcq', l: 1,
         q: 'Which content benefits MOST from a CDN?',
-        o: ['A user\'s private bank balance', 'Static assets like images, CSS, JS and videos', 'Database write operations', 'Real-time stock trades'],
-        a: 1,
+        o: ['Static assets like images, CSS, JS and videos', 'Database write operations from all regions', 'A user\'s private bank balance', 'Real-time stock trades'],
+        a: 0,
         e: 'Static, widely-requested content is ideal for edge caching. Personalized or highly dynamic data usually is not cacheable (though CDNs can still accelerate dynamic traffic via optimized routes).',
       },
       {
@@ -539,15 +539,15 @@ Examples: Cloudflare, Akamai, AWS CloudFront, Fastly, Google Cloud CDN.`,
       {
         t: 'mcq', l: 2,
         q: 'You deployed a new version of app.js but users still get the old file from the CDN. What is the BEST long-term solution?',
-        o: ['Set TTL to 0 for everything', 'Use versioned/fingerprinted file names (app.3f9a1c.js) with long cache TTL', 'Ask users to clear their cache', 'Disable the CDN'],
-        a: 1,
+        o: ['Set the TTL to 0 for every file', 'Disable the CDN for JavaScript files', 'Ask users to clear their browser cache after each deployment', 'Use fingerprinted file names (app.3f9a1c.js) with a long TTL'],
+        a: 3,
         e: 'Cache busting with content hashes in file names makes every new build a new URL, so you can cache forever (immutable) and never serve stale assets. Purge/invalidation APIs are a short-term fix.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which HTTP header mainly tells a CDN and browsers how long to cache a response?',
-        o: ['Content-Type', 'Cache-Control', 'Accept-Encoding', 'Authorization'],
-        a: 1,
+        o: ['Cache-Control', 'Content-Type', 'Accept-Encoding', 'Authorization'],
+        a: 0,
         e: 'Cache-Control (max-age, s-maxage for shared caches, public/private, no-store, immutable, stale-while-revalidate). ETag/Last-Modified enable revalidation.',
       },
       {

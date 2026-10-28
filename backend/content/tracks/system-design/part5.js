@@ -27,8 +27,8 @@ Order Service --(OrderPlaced)--> [ Queue / Broker ] --> Email worker
       {
         t: 'mcq', l: 1,
         q: 'A user uploads a video that takes 5 minutes to transcode. What is the best approach?',
-        o: ['Make the HTTP request wait 5 minutes', 'Put a job on a message queue, return immediately, and notify the user when done', 'Transcode on the client', 'Increase the HTTP timeout to 10 minutes'],
-        a: 1,
+        o: ['Keep the HTTP request open for 5 minutes and stream progress until transcoding finishes', 'Raise the HTTP timeout to 10 minutes so the request does not fail', 'Put a job on a queue, return immediately, and notify the user when done', 'Transcode the video on the client before uploading it to the server'],
+        a: 2,
         e: 'Long-running work should be async: enqueue the job, respond with 202 Accepted (job id), let workers process it and notify via webhook/push/polling.',
       },
       {
@@ -62,15 +62,15 @@ Order Service --(OrderPlaced)--> [ Queue / Broker ] --> Email worker
       {
         t: 'mcq', l: 2,
         q: 'A Kafka topic has 6 partitions and a consumer group has 8 consumers. What happens?',
-        o: ['All 8 consumers share the load equally', '6 consumers get one partition each and 2 stay idle', 'Kafka creates 2 more partitions automatically', 'Messages are duplicated to all 8 consumers'],
+        o: ['Kafka creates 2 more partitions automatically', '6 consumers get one partition each and 2 stay idle', 'Messages are duplicated so each of the 8 consumers gets all of them', 'All 8 consumers share the load equally'],
         a: 1,
         e: 'Within a consumer group, a partition is assigned to at most one consumer. Max parallelism = number of partitions, so extra consumers sit idle.',
       },
       {
         t: 'mcq', l: 2,
         q: 'How do you guarantee that all events for the same order are processed in order in Kafka?',
-        o: ['Use one consumer group per order', 'Use the order_id as the message key so all its events go to the same partition', 'Use a random key', 'Increase the replication factor'],
-        a: 1,
+        o: ['Use order_id as the message key so its events share a partition', 'Use a separate consumer group for each order', 'Increase the replication factor of the topic', 'Use a random key so the order\'s events spread evenly across all partitions'],
+        a: 0,
         e: 'Kafka guarantees ordering only within a partition. Keying by order_id routes all events of that order to the same partition.',
       },
       {
@@ -102,7 +102,7 @@ Order Service --(OrderPlaced)--> [ Queue / Broker ] --> Email worker
       {
         t: 'mcq', l: 2,
         q: 'With at-least-once delivery, what must consumers be?',
-        o: ['Stateless', 'Idempotent (processing the same message twice has the same effect as once)', 'Single-threaded', 'Written in Java'],
+        o: ['Written in Java', 'Idempotent', 'Stateless', 'Single-threaded'],
         a: 1,
         e: 'Duplicates will happen (retries, rebalances). Idempotency (e.g. storing processed message ids, upserts, unique constraints) prevents double charging or double emails.',
       },
@@ -124,8 +124,8 @@ A **DLQ** is a separate queue where messages go after they **fail processing rep
       {
         t: 'mcq', l: 3,
         q: 'Why is Kafka able to achieve very high throughput?',
-        o: ['It stores everything in RAM only', 'Sequential disk writes, OS page cache, batching, compression and zero-copy transfer', 'It does not replicate data', 'It uses SQL internally'],
-        a: 1,
+        o: ['Sequential disk writes, page cache, batching, compression, zero-copy', 'It keeps all data in RAM only and never writes to disk', 'It uses an internal SQL engine that indexes every message', 'It does not replicate data across brokers, so each write is acknowledged instantly'],
+        a: 0,
         e: 'Kafka appends to logs sequentially (fast even on HDDs), relies on the page cache, batches and compresses records, and uses sendfile() zero-copy to move data from disk to network.',
       },
       {
@@ -158,8 +158,8 @@ A **DLQ** is a separate queue where messages go after they **fail processing rep
       {
         t: 'mcq', l: 1,
         q: 'Which AWS service is a fully managed message QUEUE?',
-        o: ['SNS', 'SQS', 'S3', 'Route 53'],
-        a: 1,
+        o: ['S3', 'SNS', 'Route 53', 'SQS'],
+        a: 3,
         e: 'SQS = queue (point-to-point, pull). SNS = pub/sub topic (push to subscribers). A common pattern is SNS fan-out to multiple SQS queues.',
       },
     ],
@@ -190,8 +190,8 @@ Trade-off is AP (Dynamo) vs CP (etcd/Spanner) depending on requirements.`,
       {
         t: 'mcq', l: 2,
         q: 'What is the purpose of a Bloom filter in a key-value store read path?',
-        o: ['Encrypt keys', 'Quickly tell that a key is definitely NOT in an SSTable, avoiding unnecessary disk reads', 'Sort keys', 'Replicate data'],
-        a: 1,
+        o: ['Replicate SSTables to other nodes', 'Encrypt each key with a hash before it is written to an SSTable on disk', 'Keep keys sorted inside each SSTable', 'Quickly tell that a key is definitely NOT in an SSTable'],
+        a: 3,
         e: 'A Bloom filter can return false positives but never false negatives. "Not present" means skip that file, which saves disk I/O.',
       },
       {
@@ -214,15 +214,15 @@ Trade-off is AP (Dynamo) vs CP (etcd/Spanner) depending on requirements.`,
       {
         t: 'mcq', l: 3,
         q: 'What is "hinted handoff"?',
-        o: ['A way to encrypt data in transit', 'When a replica is down, another node temporarily stores its writes and delivers them when the replica comes back', 'A load balancing algorithm', 'A query optimization technique'],
+        o: ['A query optimization that hints which index the database should use', 'Another node holds a down replica\'s writes and delivers them later', 'A way to encrypt data in transit between replicas', 'A load balancing algorithm that hands requests to the least busy node'],
         a: 1,
         e: 'Hinted handoff keeps writes available during temporary failures (sloppy quorum). Permanent divergence is repaired later via Merkle-tree anti-entropy.',
       },
       {
         t: 'mcq', l: 3,
         q: 'Why do Dynamo-style systems use Merkle trees?',
-        o: ['To build indexes', 'To efficiently compare replicas and find which key ranges differ, minimizing data transfer during repair', 'To elect a leader', 'To compress values'],
-        a: 1,
+        o: ['To elect a new leader among replicas after a network partition heals and data diverges', 'To build secondary indexes over each replica\'s data', 'To compare replicas and find which key ranges differ, minimizing repair traffic', 'To compress values before they are written to disk'],
+        a: 2,
         e: 'Replicas compare root hashes; only mismatching subtrees are explored, so synchronization transfers only the differing ranges.',
       },
       {
@@ -273,8 +273,8 @@ When exceeded, respond with **HTTP 429 Too Many Requests** plus headers like \`R
       {
         t: 'mcq', l: 1,
         q: 'Which HTTP status code should be returned when a client exceeds the rate limit?',
-        o: ['403 Forbidden', '429 Too Many Requests', '503 Service Unavailable', '400 Bad Request'],
-        a: 1,
+        o: ['429 Too Many Requests', '403 Forbidden', '400 Bad Request', '503 Service Unavailable'],
+        a: 0,
         e: '429 Too Many Requests, ideally with a Retry-After header telling the client when to retry.',
       },
       {
@@ -305,15 +305,15 @@ When exceeded, respond with **HTTP 429 Too Many Requests** plus headers like \`R
       {
         t: 'mcq', l: 2,
         q: 'Which rate limiting algorithm allows short bursts while enforcing an average rate?',
-        o: ['Leaky bucket', 'Token bucket', 'Fixed window', 'None of them'],
+        o: ['Fixed window', 'Token bucket', 'Leaky bucket', 'None of them'],
         a: 1,
         e: 'Token bucket lets clients spend accumulated tokens in a burst (up to bucket capacity) while the refill rate enforces the long-term average.',
       },
       {
         t: 'mcq', l: 2,
         q: 'What is the main flaw of the fixed window counter algorithm?',
-        o: ['It uses too much memory', 'Traffic bursts at window boundaries can allow up to 2x the limit in a short period', 'It cannot be implemented in Redis', 'It blocks all requests'],
-        a: 1,
+        o: ['It cannot be implemented in Redis without Lua scripts', 'It uses too much memory, since every request timestamp is stored', 'Bursts at window boundaries can allow up to 2x the limit', 'It blocks all requests once the window starts'],
+        a: 2,
         e: 'A client can send the full limit at the end of one window and again at the start of the next. Sliding windows fix this.',
       },
       {
@@ -349,8 +349,8 @@ Lua makes check-and-decrement **atomic** (no race between servers).
       {
         t: 'mcq', l: 3,
         q: 'Two app servers read a Redis counter (value 99, limit 100), both increment and allow the request. Which technique prevents this race condition?',
-        o: ['Read the value twice', 'Use atomic operations like INCR or a Lua script for check-and-increment', 'Increase the limit', 'Use a bigger Redis instance'],
-        a: 1,
+        o: ['Use atomic INCR or a Lua script for check-and-increment', 'Use a bigger Redis instance so reads are faster', 'Read the counter twice and compare before allowing', 'Increase the limit slightly so small overshoots from races do not matter'],
+        a: 0,
         e: 'GET-then-SET is not atomic. INCR returns the new value atomically (then compare to limit), and Lua scripts run atomically on the Redis server.',
       },
       {
@@ -407,15 +407,15 @@ async function withRetry(fn, retries = 5, base = 100, cap = 5000) {
       {
         t: 'mcq', l: 1,
         q: 'Which error should generally NOT be retried?',
-        o: ['503 Service Unavailable', 'Connection timeout', '400 Bad Request', '429 Too Many Requests (after Retry-After)'],
-        a: 2,
+        o: ['400 Bad Request', '503 Service Unavailable', '429 Too Many Requests (after Retry-After)', 'Connection timeout'],
+        a: 0,
         e: '400 means the request itself is invalid; retrying the same request will fail again. Transient errors (timeouts, 503, 429, 502/504) are retry candidates.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Why is jitter added to exponential backoff?',
-        o: ['To make retries faster', 'To spread out retries from many clients and avoid synchronized retry storms (thundering herd)', 'To encrypt requests', 'To reduce the number of retries'],
-        a: 1,
+        o: ['To make retries faster by skipping some of the backoff delay', 'To encrypt request timing so attackers cannot guess the schedule', 'To spread out retries from many clients and avoid retry storms', 'To reduce the total number of retries each client makes'],
+        a: 2,
         e: 'Without jitter, clients that failed together retry together, repeatedly hammering the recovering service in waves.',
       },
       {
@@ -440,8 +440,8 @@ A **circuit breaker** wraps calls to a remote service and **stops calling it whe
       {
         t: 'mcq', l: 2,
         q: 'In which circuit breaker state are a limited number of test requests allowed through?',
-        o: ['Closed', 'Open', 'Half-Open', 'Locked'],
-        a: 2,
+        o: ['Closed', 'Locked', 'Open', 'Half-Open'],
+        a: 3,
         e: 'Half-Open probes whether the downstream has recovered. Successes close the circuit; a failure re-opens it.',
       },
       {
@@ -461,8 +461,8 @@ A **circuit breaker** wraps calls to a remote service and **stops calling it whe
       {
         t: 'mcq', l: 3,
         q: 'Service A calls B, B calls C. Each layer retries 3 times. If C is down, how many calls can C receive for ONE user request?',
-        o: ['3', '6', '9 (or more, e.g. 16 counting original attempts)', '1'],
-        a: 2,
+        o: ['1, since C is down and the first error stops every layer', '3, since only B calls C directly', '6, since A and B each retry 3 times', '9 or more, since retries multiply across layers'],
+        a: 3,
         e: 'Retries multiply across layers: with 3 attempts at A and 3 at B, C sees 3 × 3 = 9 calls (4 × 4 = 16 if "3 retries" means 4 attempts each). Retry only at one layer (usually the edge) and use retry budgets plus circuit breakers.',
       },
       {
@@ -542,15 +542,15 @@ In dynamic environments (containers, auto scaling), service instances come and g
       {
         t: 'mcq', l: 2,
         q: 'How does service discovery work by default in Kubernetes?',
-        o: ['Each pod must register in Eureka', 'Services get a stable virtual IP and DNS name (e.g. orders.default.svc.cluster.local) via CoreDNS, routing to healthy pod endpoints', 'Pods use hard-coded IPs', 'Through the Docker Hub'],
-        a: 1,
+        o: ['Each pod must register itself with a Eureka server on startup', 'Through Docker Hub, which tracks where each image is running', 'Services get a stable virtual IP and DNS name via CoreDNS, routing to healthy pods', 'Pods call each other using hard-coded pod IPs that are written into the deployment YAML'],
+        a: 2,
         e: 'A Kubernetes Service gives a stable ClusterIP and DNS name; endpoints are updated automatically from pods that pass readiness probes; kube-proxy (iptables/IPVS) or eBPF routes traffic.',
       },
       {
         t: 'mcq', l: 2,
         q: 'Which tool is NOT primarily used as a service registry?',
-        o: ['Consul', 'etcd', 'Eureka', 'Grafana'],
-        a: 3,
+        o: ['etcd', 'Grafana', 'Eureka', 'Consul'],
+        a: 1,
         e: 'Grafana is a dashboard/visualization tool. Consul, etcd, ZooKeeper and Eureka are commonly used as service registries.',
       },
       {
